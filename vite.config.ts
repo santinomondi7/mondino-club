@@ -13,10 +13,7 @@ export default defineConfig(() => {
         registerType: 'autoUpdate',
         includeAssets: [
           'icon.svg',
-          'apple-touch-icon.png',
-          'pwa-192x192.png',
-          'pwa-512x512.png',
-          'pwa-maskable-512x512.png',
+          'images/mondino_app_logo.jpg',
         ],
         manifest: {
           id: '/',
@@ -25,29 +22,23 @@ export default defineConfig(() => {
           description:
             'Programa de fidelización para clientes de Farmacia y Perfumería Mondino. Sumá puntos con tu código QR y canjeá beneficios exclusivos.',
           theme_color: '#0F5132',
-          background_color: '#F8FAFC',
+          background_color: '#FFFFFF',
           display: 'standalone',
           start_url: '/',
           scope: '/',
           orientation: 'portrait-primary',
           icons: [
             {
-              src: '/pwa-192x192.png',
-              sizes: '192x192',
-              type: 'image/png',
+              src: '/images/mondino_app_logo.jpg',
+              sizes: '811x775',
+              type: 'image/jpeg',
               purpose: 'any',
             },
             {
-              src: '/pwa-512x512.png',
+              src: '/images/mondino_app_logo.jpg',
               sizes: '512x512',
-              type: 'image/png',
-              purpose: 'any',
-            },
-            {
-              src: '/pwa-maskable-512x512.png',
-              sizes: '512x512',
-              type: 'image/png',
-              purpose: 'maskable',
+              type: 'image/jpeg',
+              purpose: 'any maskable',
             },
             {
               src: '/icon.svg',

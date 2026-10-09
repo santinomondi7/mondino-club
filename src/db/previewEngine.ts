@@ -1593,20 +1593,18 @@ export function previewUpdateSettingsAdmin(
     state.settings = {
       ...state.settings,
       ...updates,
+      appLogoUrl: DEFAULT_APP_SETTINGS.appLogoUrl,
       basePointsRateLocked: BASE_PESOS_PER_POINT, // INMUTABLE: $100 = 1 punto
       birthdayBonusPoints: BIRTHDAY_BONUS_POINTS, // 20 puntos por cumpleaños
       referrerBonusPoints: REFERRER_BONUS_POINTS, // 15 puntos por invitar a un amigo
       referredBonusPoints: REFERRED_BONUS_POINTS, // 10 puntos por ser invitado
     };
   } else {
-    // Empleado puede actualizar la imagen principal de la web (logoUrl) y el logotipo de la app (appLogoUrl)
+    // Empleado puede actualizar la imagen principal de la web (logoUrl)
     state.settings = {
       ...state.settings,
       logoUrl: updates.logoUrl || state.settings.logoUrl,
-      appLogoUrl:
-        updates.appLogoUrl ||
-        state.settings.appLogoUrl ||
-        DEFAULT_APP_SETTINGS.appLogoUrl,
+      appLogoUrl: DEFAULT_APP_SETTINGS.appLogoUrl,
       basePointsRateLocked: BASE_PESOS_PER_POINT,
       birthdayBonusPoints: BIRTHDAY_BONUS_POINTS,
       referrerBonusPoints: REFERRER_BONUS_POINTS,

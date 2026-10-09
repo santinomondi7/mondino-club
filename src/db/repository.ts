@@ -641,15 +641,44 @@ export async function validateQrForStaffInSupabase(
   auth: VerifiedAuthContext,
   qrTokenOrEmail: string
 ): Promise<{ customer: ValidatedQrCustomer }> {
+  const cleanQuery = qrTokenOrEmail.trim();
   const { data, error } = await auth.userClient.rpc('validate_qr_for_staff', {
-    p_query: qrTokenOrEmail,
+    p_query: cleanQuery,
   });
 
-  if (error || !data) {
-    throw new Error(error?.message || 'No se pudo validar el código QR del cliente.');
+  if (!error && data) {
+    return { customer: data as ValidatedQrCustomer };
   }
 
-  return { customer: data as ValidatedQrCustomer };
+  const client = auth.adminClient || auth.userClient;
+  const { data: rows, error: fallbackErr } = await client
+    .from('profiles')
+    .select('*')
+    .or(`qr_token.ilike.${cleanQuery},email.ilike.${cleanQuery}`)
+    .limit(1);
+
+  if (!fallbackErr && rows && rows.length > 0) {
+    const r = rows[0];
+    const firstName = String(r.first_name ?? '');
+    const lastName = String(r.last_name ?? '');
+    const email = String(r.email ?? '');
+    return {
+      customer: {
+        id: String(r.id),
+        firstName,
+        lastName,
+        fullName: `${firstName} ${lastName}`.trim() || email,
+        email,
+        maskedEmail: email,
+        qrToken: String(r.qr_token ?? ''),
+        pointsBalance: Number(r.points_balance ?? 0),
+        status: String(r.status ?? 'ACTIVO'),
+        birthDate: String(r.birth_date ?? ''),
+      },
+    };
+  }
+
+  throw new Error(error?.message || 'No se pudo validar el código QR del cliente.');
 }
 
 export async function previewPointsForStaffInSupabase(
@@ -969,8 +998,7 @@ export async function updateSettingsAdminInSupabase(
   // Administrador puede actualizar todos los parámetros globales (excepto la regla base inmutable $100 = 1 pto)
   const isFullAdmin = actor.role === UserRole.ADMINISTRADOR;
   const nextBannerUrl = settings.logoUrl || current.logoUrl || DEFAULT_APP_SETTINGS.logoUrl;
-  const nextAppLogoUrl =
-    settings.appLogoUrl || current.appLogoUrl || DEFAULT_APP_LOGO_URL;
+  const nextAppLogoUrl = DEFAULT_APP_LOGO_URL;
 
   const payload = {
     id: 'mondino-global-settings',

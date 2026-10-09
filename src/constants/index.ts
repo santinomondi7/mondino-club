@@ -83,12 +83,11 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
  * Codifica tanto el banner principal de la web (logoUrl) como el logotipo oficial de la app (appLogoUrl)
  * dentro de la columna existente `logo_url` de Supabase sin necesidad de alterar el esquema SQL.
  */
-export function encodeLogoAndBanner(logoUrl?: string | null, appLogoUrl?: string | null): string {
+export function encodeLogoAndBanner(logoUrl?: string | null, _appLogoUrl?: string | null): string {
   const cleanBanner = (logoUrl || DEFAULT_APP_SETTINGS.logoUrl).trim();
-  const cleanAppLogo = (appLogoUrl || DEFAULT_APP_LOGO_URL).trim();
   return JSON.stringify({
     bannerUrl: cleanBanner,
-    appLogoUrl: cleanAppLogo,
+    appLogoUrl: DEFAULT_APP_LOGO_URL,
   });
 }
 
@@ -111,10 +110,7 @@ export function decodeLogoAndBanner(raw?: string | null): {
           typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
             ? parsed.bannerUrl.trim()
             : DEFAULT_APP_SETTINGS.logoUrl,
-        appLogoUrl:
-          typeof parsed.appLogoUrl === 'string' && parsed.appLogoUrl.trim()
-            ? parsed.appLogoUrl.trim()
-            : DEFAULT_APP_LOGO_URL,
+        appLogoUrl: DEFAULT_APP_LOGO_URL,
       };
     } catch {
       // Fallback si no es JSON válido

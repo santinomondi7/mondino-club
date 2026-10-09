@@ -38,9 +38,6 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
   const [clubName, setClubName] = useState(settings.clubName);
   const [clubSubtitle, setClubSubtitle] = useState(settings.clubSubtitle);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
-  const [appLogoUrl, setAppLogoUrl] = useState(
-    settings.appLogoUrl || '/images/mondino_app_logo.jpg'
-  );
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(settings.secondaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
@@ -52,7 +49,6 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
     setClubName(settings.clubName);
     setClubSubtitle(settings.clubSubtitle);
     setLogoUrl(settings.logoUrl);
-    setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
     setPrimaryColor(settings.primaryColor);
     setSecondaryColor(settings.secondaryColor);
     setAccentColor(settings.accentColor);
@@ -107,7 +103,7 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
         clubName,
         clubSubtitle,
         logoUrl,
-        appLogoUrl,
+        appLogoUrl: '/images/mondino_app_logo.jpg',
         primaryColor,
         secondaryColor,
         accentColor,
@@ -595,12 +591,21 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
-            <ImageUploaderField
-              label="Logotipo Oficial de la App (Cabecera, Credencial QR e Ícono)"
-              value={appLogoUrl}
-              onChange={setAppLogoUrl}
-              helperText="Subí el logotipo cuadrado de Farmacia Mondino (por ejemplo tu archivo images.jpeg). Se mostrará en toda la app y en el ícono del navegador."
-            />
+            <div className="flex items-center gap-3.5 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+              <img
+                src="/images/mondino_app_logo.jpg"
+                alt="Logotipo Oficial Farmacia Mondino"
+                className="w-14 h-14 rounded-xl object-contain bg-white border border-emerald-200 shrink-0"
+              />
+              <div>
+                <p className="text-xs font-bold text-slate-900">
+                  Logotipo Oficial de la App (Programado de forma permanente)
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  El logotipo oficial de Farmacia Mondino se encuentra fijado por programación en toda la aplicación.
+                </p>
+              </div>
+            </div>
 
             <ImageUploaderField
               label="Imagen Principal de Portada de la Web"

@@ -18,6 +18,11 @@ import {
   isTodayUsersBirthday,
   parseBirthDateParts,
 } from '../utils/points.ts';
+import {
+  isDeviceNotificationsEnabled,
+  requestAndActivateNotifications,
+  triggerSystemAndInAppNotification,
+} from '../utils/notifications.ts';
 
 export const CustomerProfilePage: React.FC = () => {
   const { profile, settings, referrals, refreshAllData, logout } = useAuth();
@@ -64,11 +69,22 @@ export const CustomerProfilePage: React.FC = () => {
   const [refMsg, setRefMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [copiedMyCode, setCopiedMyCode] = useState(false);
 
-  const [browserPerm, setBrowserPerm] = useState<string>(() =>
-    typeof window !== 'undefined' && 'Notification' in window
-      ? Notification.permission
-      : 'unsupported'
+  const [deviceNotifsActive, setDeviceNotifsActive] = useState<boolean>(() =>
+    isDeviceNotificationsEnabled()
   );
+
+  useEffect(() => {
+    const onStatusChange = (e: Event) => {
+      const custom = e as CustomEvent<boolean>;
+      if (typeof custom.detail === 'boolean') {
+        setDeviceNotifsActive(custom.detail);
+      } else {
+        setDeviceNotifsActive(isDeviceNotificationsEnabled());
+      }
+    };
+    window.addEventListener('mondino-notif-status-change', onStatusChange);
+    return () => window.removeEventListener('mondino-notif-status-change', onStatusChange);
+  }, []);
 
   if (!profile) return null;
 
@@ -153,19 +169,24 @@ export const CustomerProfilePage: React.FC = () => {
   };
 
   const handleEnableDeviceNotifications = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
     try {
-      const perm = await Notification.requestPermission();
-      setBrowserPerm(perm);
-      if (perm === 'granted') {
-        new Notification(`Notificaciones activas en ${settings.clubName}`, {
-          body: 'Recibirás avisos cuando sumes puntos, en tu cumpleaños y ante nuevas promociones.',
-          icon: '/icon.svg',
-        });
-      }
+      await requestAndActivateNotifications(
+        settings.clubName,
+        settings.appLogoUrl || '/images/mondino_app_logo.jpg'
+      );
+      setDeviceNotifsActive(true);
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const handleTestNotification = async () => {
+    await triggerSystemAndInAppNotification({
+      title: `Aviso de ${settings.clubName}`,
+      body: `Hola ${profile.firstName}, tus notificaciones están activas en este dispositivo.`,
+      icon: settings.appLogoUrl || '/images/mondino_app_logo.jpg',
+      actionUrl: '/mi-qr',
+    });
   };
 
   return (
@@ -286,28 +307,36 @@ export const CustomerProfilePage: React.FC = () => {
           </div>
 
           <div className="pt-3 border-t border-slate-100 space-y-3">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-800">
                 <Bell className="w-4 h-4 text-emerald-700" />
                 Preferencias de Notificaciones de la App
               </div>
-              {browserPerm !== 'unsupported' && (
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleEnableDeviceNotifications}
-                  disabled={browserPerm === 'granted'}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
-                    browserPerm === 'granted'
-                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 cursor-default'
-                      : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 cursor-pointer'
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold transition cursor-pointer ${
+                    deviceNotifsActive
+                      ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200'
                   }`}
                 >
                   <Smartphone className="w-3.5 h-3.5" />
-                  {browserPerm === 'granted'
+                  {deviceNotifsActive
                     ? 'Avisos activos en este dispositivo ✓'
                     : 'Activar avisos en este dispositivo'}
                 </button>
-              )}
+                {deviceNotifsActive && (
+                  <button
+                    type="button"
+                    onClick={handleTestNotification}
+                    className="px-2.5 py-1 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-[11px] font-semibold cursor-pointer"
+                  >
+                    Probar aviso
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">

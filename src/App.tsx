@@ -20,10 +20,10 @@ const MondinoClubRouter: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 text-slate-700 p-6">
         <img
-          src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+          src="/images/mondino_app_logo.jpg"
           alt={settings.clubName}
           referrerPolicy="no-referrer"
-          className="w-16 h-16 rounded-2xl object-cover border border-emerald-200 shadow-sm mb-3"
+          className="w-16 h-16 rounded-2xl object-contain bg-white border border-emerald-200 shadow-sm mb-3"
         />
         <div className="w-8 h-8 rounded-full border-3 border-emerald-900 border-t-transparent animate-spin mb-3" />
         <p className="text-sm font-semibold text-slate-900">Cargando {settings.clubName}...</p>

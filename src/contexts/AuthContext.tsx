@@ -21,6 +21,7 @@ import {
   getPreviewSessionToken,
   setPreviewSessionToken,
 } from '../services/api.ts';
+import { dispatchUnreadNotifications } from '../utils/notifications.ts';
 
 export type WorkspaceMode = 'CLIENTE' | 'EMPLEADO' | 'ADMINISTRADOR';
 
@@ -70,37 +71,6 @@ function formatOAuthErrorMessage(rawError: string): string {
     return 'No se pudo completar la autorización con Google. Intentá nuevamente.';
   }
   return decoded;
-}
-
-function dispatchNativeBrowserNotifications(items: NotificationItem[], iconUrl?: string) {
-  if (typeof window === 'undefined' || !('Notification' in window)) return;
-  if (Notification.permission !== 'granted') return;
-
-  const effectiveIcon = iconUrl || '/images/mondino_app_logo.jpg';
-
-  try {
-    const seenRaw = sessionStorage.getItem('mondino_pushed_notifs') || '[]';
-    const seenIds = new Set<string>(JSON.parse(seenRaw));
-    let updated = false;
-
-    for (const item of items) {
-      if (!item.isRead && !seenIds.has(item.id)) {
-        seenIds.add(item.id);
-        updated = true;
-        new Notification(item.title, {
-          body: item.message,
-          icon: effectiveIcon,
-          badge: effectiveIcon,
-        });
-      }
-    }
-
-    if (updated) {
-      sessionStorage.setItem('mondino_pushed_notifs', JSON.stringify(Array.from(seenIds)));
-    }
-  } catch {
-    // ignore browser notification restrictions in iframes
-  }
 }
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -194,7 +164,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setNotifications(data.notifications);
       setAdminData(data.adminData);
       setAuthError(null);
-      dispatchNativeBrowserNotifications(data.notifications || []);
+      await dispatchUnreadNotifications(
+        data.notifications || [],
+        data.settings?.appLogoUrl || '/images/mondino_app_logo.jpg'
+      );
     } catch (err: any) {
       console.error('Error sincronizando datos:', err);
       setPreviewSessionToken(null);
@@ -205,6 +178,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await loadPublicCatalog();
     }
   }, [loadPublicCatalog]);
+
+  // Poll for new notifications when user is logged in and tab is visible
+  useEffect(() => {
+    if (!profile) return;
+    const interval = window.setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refreshAllData().catch(() => {});
+      }
+    }, 20000);
+    return () => window.clearInterval(interval);
+  }, [profile?.id, refreshAllData]);
 
   useEffect(() => {
     let mounted = true;

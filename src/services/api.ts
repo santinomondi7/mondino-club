@@ -663,18 +663,47 @@ export const mondinoApi = {
   },
 
   async validateQrForStaff(qrToken: string): Promise<{ customer: ValidatedQrCustomer }> {
+    const cleanQuery = qrToken.trim();
     try {
       return await apiRequest('/api/staff/validate-qr', {
         method: 'POST',
-        body: JSON.stringify({ qrToken }),
+        body: JSON.stringify({ qrToken: cleanQuery }),
       });
     } catch (err) {
-      if (!isApiRouteUnavailableError(err) || !supabase) throw err;
+      if (!isApiRouteUnavailableError(err) && !supabase) throw err;
+      if (!supabase) throw err;
       const { data, error } = await supabase.rpc('validate_qr_for_staff', {
-        p_query: qrToken,
+        p_query: cleanQuery,
       });
-      if (error || !data) throw new Error(error?.message || 'Código QR no válido.');
-      return { customer: data as ValidatedQrCustomer };
+      if (!error && data) {
+        return { customer: data as ValidatedQrCustomer };
+      }
+      const { data: rows } = await supabase
+        .from('profiles')
+        .select('*')
+        .or(`qr_token.ilike.${cleanQuery},email.ilike.${cleanQuery}`)
+        .limit(1);
+      if (rows && rows.length > 0) {
+        const r = rows[0];
+        const firstName = String(r.first_name ?? '');
+        const lastName = String(r.last_name ?? '');
+        const email = String(r.email ?? '');
+        return {
+          customer: {
+            id: String(r.id),
+            firstName,
+            lastName,
+            fullName: `${firstName} ${lastName}`.trim() || email,
+            email,
+            maskedEmail: email,
+            qrToken: String(r.qr_token ?? ''),
+            pointsBalance: Number(r.points_balance ?? 0),
+            status: String(r.status ?? 'ACTIVO'),
+            birthDate: String(r.birth_date ?? ''),
+          },
+        };
+      }
+      throw new Error(error?.message || (err as Error)?.message || 'Código QR no válido.');
     }
   },
 

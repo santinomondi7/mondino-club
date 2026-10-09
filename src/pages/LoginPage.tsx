@@ -13,6 +13,7 @@ import {
   HeartHandshake,
 } from 'lucide-react';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
+import { ZoomControls } from '../components/ZoomControls.tsx';
 
 const PHARMACY_QUOTES = [
   {
@@ -79,10 +80,10 @@ export const LoginPage: React.FC = () => {
           {/* Zone 1: Brand Logo & Wordmark */}
           <div className="flex items-center gap-3 shrink-0">
             <img
-              src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+              src="/images/mondino_app_logo.jpg"
               alt={settings.clubName}
               referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+              className="w-10 h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
             />
             <div>
               <span className="font-bold text-emerald-950 tracking-tight text-lg font-display whitespace-nowrap block leading-tight">
@@ -111,7 +112,8 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* Zone 3: Primary Action */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <ZoomControls />
             <PWAInstallButton />
           </div>
         </div>
@@ -267,10 +269,10 @@ export const LoginPage: React.FC = () => {
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xl p-6 sm:p-8">
             <div className="mb-6 flex items-center gap-3.5">
               <img
-                src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+                src="/images/mondino_app_logo.jpg"
                 alt={settings.clubName}
                 referrerPolicy="no-referrer"
-                className="w-14 h-14 rounded-2xl object-cover border border-emerald-200 shadow-xs shrink-0"
+                className="w-14 h-14 rounded-2xl object-contain bg-white border border-emerald-200 shadow-xs shrink-0"
               />
               <div>
                 <h2 className="text-xl font-bold text-slate-900 font-display">

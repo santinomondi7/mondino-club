@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import jsQR from 'jsqr';
 import {
   Camera,
   CheckCircle2,
@@ -9,6 +10,8 @@ import {
   AlertCircle,
   X,
   RotateCcw,
+  RefreshCw,
+  ImageUp,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { mondinoApi } from '../services/api.ts';
@@ -34,8 +37,11 @@ export const StaffRegisterPurchasePage: React.FC = () => {
 
   // Camera scanner state
   const [cameraActive, setCameraActive] = useState(false);
+  const [cameraFacingMode, setCameraFacingMode] = useState<'environment' | 'user'>('environment');
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<number | null>(null);
+  const qrFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Sale inputs (Employee NEVER enters points manually; only real sale amount + category)
   const [saleAmount, setSaleAmount] = useState<string>('100000');
@@ -63,7 +69,23 @@ export const StaffRegisterPurchasePage: React.FC = () => {
     operationId?: string;
   } | null>(null);
 
+  const extractCleanQrValue = (raw: string): string => {
+    const trimmed = raw.trim();
+    const match = trimmed.match(/MND-QR-[A-Z0-9-]+/i);
+    if (match && match[0]) {
+      return match[0].toUpperCase();
+    }
+    return trimmed;
+  };
+
   const stopCamera = () => {
+    if (scanIntervalRef.current) {
+      window.clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -77,69 +99,254 @@ export const StaffRegisterPurchasePage: React.FC = () => {
     };
   }, []);
 
-  const handleStartCamera = async () => {
-    setFeedback(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
-      });
-      streamRef.current = stream;
-      setCameraActive(true);
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-      }
-
-      // Use native BarcodeDetector if available
-      if ('BarcodeDetector' in window) {
-        const Detector = (window as unknown as { BarcodeDetector: any }).BarcodeDetector;
-        const detector = new Detector({ formats: ['qr_code'] });
-        const interval = setInterval(async () => {
-          if (!videoRef.current || !streamRef.current) {
-            clearInterval(interval);
-            return;
-          }
-          try {
-            const barcodes = await detector.detect(videoRef.current);
-            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
-              const rawCode = barcodes[0].rawValue;
-              clearInterval(interval);
-              stopCamera();
-              setQrInput(rawCode);
-              await handleValidateQrToken(rawCode);
-            }
-          } catch {
-            // continue scanning
-          }
-        }, 500);
-      }
-    } catch {
-      setFeedback({
-        type: 'error',
-        title: 'Cámara no disponible en este navegador',
-        detail:
-          'Podés ingresar el código QR manualmente o seleccionar el QR del cliente debajo.',
-      });
-    }
-  };
-
-  const handleValidateQrToken = async (tokenToValidate?: string) => {
-    const targetToken = (tokenToValidate ?? qrInput).trim();
-    if (!targetToken) return;
+  const handleValidateQrToken = async (tokenToValidate?: string, fromScanner = false) => {
+    const rawValue = (tokenToValidate ?? qrInput).trim();
+    if (!rawValue) return;
+    const targetToken = extractCleanQrValue(rawValue);
+    setQrInput(targetToken);
     setValidatingQr(true);
     setFeedback(null);
+
     try {
       const res = await mondinoApi.validateQrForStaff(targetToken);
       setCustomer(res.customer);
       setIdempotencyKey(generateIdempotencyKey('venta'));
+      if (fromScanner) {
+        setFeedback({
+          type: 'success',
+          title: `Código QR escaneado: ${res.customer.fullName}`,
+          detail: `Cliente seleccionado automáticamente (${res.customer.qrToken}). Saldo actual: ${formatPoints(res.customer.pointsBalance)} pts.`,
+        });
+      }
     } catch (err: any) {
-      setCustomer(null);
-      setFeedback({
-        type: 'error',
-        title: 'No se pudo validar el código QR',
-        detail: err.message || 'El código QR no corresponde a una cuenta activa.',
-      });
+      // Fallback: check loaded active profiles in adminData in case of network/RPC mismatch
+      const localMatch = (adminData?.profiles || []).find(
+        (p) =>
+          p.qrToken?.toUpperCase() === targetToken.toUpperCase() ||
+          p.email?.toLowerCase() === targetToken.toLowerCase()
+      );
+      if (localMatch) {
+        const matchedCustomer: ValidatedQrCustomer = {
+          id: localMatch.id,
+          firstName: localMatch.firstName,
+          lastName: localMatch.lastName,
+          fullName: `${localMatch.firstName} ${localMatch.lastName}`.trim() || localMatch.email,
+          email: localMatch.email,
+          maskedEmail: localMatch.email,
+          qrToken: localMatch.qrToken,
+          pointsBalance: localMatch.pointsBalance,
+          status: localMatch.status,
+          birthDate: localMatch.birthDate,
+        };
+        setCustomer(matchedCustomer);
+        setIdempotencyKey(generateIdempotencyKey('venta'));
+        if (fromScanner) {
+          setFeedback({
+            type: 'success',
+            title: `Código QR escaneado: ${matchedCustomer.fullName}`,
+            detail: `Cliente seleccionado automáticamente (${matchedCustomer.qrToken}). Saldo actual: ${formatPoints(matchedCustomer.pointsBalance)} pts.`,
+          });
+        }
+      } else {
+        setCustomer(null);
+        setFeedback({
+          type: 'error',
+          title: 'No se pudo validar el código QR',
+          detail: err.message || 'El código QR no corresponde a una cuenta activa.',
+        });
+      }
     } finally {
       setValidatingQr(false);
+    }
+  };
+
+  // Attach MediaStream to <video> after it mounts and run continuous QR decoding (jsQR + BarcodeDetector)
+  useEffect(() => {
+    if (!cameraActive || !streamRef.current) return;
+
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
+
+    videoEl.srcObject = streamRef.current;
+    videoEl.setAttribute('playsinline', 'true');
+    videoEl.muted = true;
+    videoEl.play().catch(() => {
+      // Autoplay handled
+    });
+
+    const offscreenCanvas = document.createElement('canvas');
+    const ctx = offscreenCanvas.getContext('2d', { willReadFrequently: true });
+
+    let nativeDetector: any = null;
+    if ('BarcodeDetector' in window) {
+      try {
+        const DetectorClass = (window as unknown as { BarcodeDetector: any }).BarcodeDetector;
+        nativeDetector = new DetectorClass({ formats: ['qr_code'] });
+      } catch {
+        nativeDetector = null;
+      }
+    }
+
+    let isDecoding = false;
+
+    scanIntervalRef.current = window.setInterval(async () => {
+      if (isDecoding || !videoRef.current || !streamRef.current) return;
+      const v = videoRef.current;
+      if (v.readyState < 2 || v.videoWidth === 0 || v.videoHeight === 0) return;
+
+      isDecoding = true;
+      try {
+        let detectedCode: string | null = null;
+
+        // 1. Universal pure-JS QR decoding via jsQR (works on iOS Safari, Android, Firefox, Desktop)
+        if (ctx) {
+          const maxDim = 640;
+          const scale = Math.min(1, maxDim / Math.max(v.videoWidth, v.videoHeight));
+          const w = Math.max(1, Math.floor(v.videoWidth * scale));
+          const h = Math.max(1, Math.floor(v.videoHeight * scale));
+          offscreenCanvas.width = w;
+          offscreenCanvas.height = h;
+          ctx.drawImage(v, 0, 0, w, h);
+          const imageData = ctx.getImageData(0, 0, w, h);
+          const qrResult = jsQR(imageData.data, w, h, {
+            inversionAttempts: 'attemptBoth',
+          });
+          if (qrResult && qrResult.data && qrResult.data.trim()) {
+            detectedCode = qrResult.data.trim();
+          }
+        }
+
+        // 2. Native BarcodeDetector fallback if jsQR didn't catch the frame
+        if (!detectedCode && nativeDetector) {
+          try {
+            const barcodes = await nativeDetector.detect(v);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              detectedCode = String(barcodes[0].rawValue).trim();
+            }
+          } catch {
+            // continue
+          }
+        }
+
+        if (detectedCode) {
+          stopCamera();
+          await handleValidateQrToken(detectedCode, true);
+        }
+      } finally {
+        isDecoding = false;
+      }
+    }, 180);
+
+    return () => {
+      if (scanIntervalRef.current) {
+        window.clearInterval(scanIntervalRef.current);
+        scanIntervalRef.current = null;
+      }
+    };
+  }, [cameraActive, cameraFacingMode]);
+
+  const startCameraWithMode = async (modeToUse: 'environment' | 'user') => {
+    setFeedback(null);
+    stopCamera();
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setFeedback({
+        type: 'error',
+        title: 'Cámara no soportada en este navegador',
+        detail: 'Podés usar el botón "Escanear desde foto" o ingresar el código manualmente.',
+      });
+      return;
+    }
+
+    try {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: modeToUse },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch {
+        // Fallback if specific facingMode or resolution constraint is not supported (e.g. PC webcam)
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false,
+        });
+      }
+
+      streamRef.current = stream;
+      setCameraFacingMode(modeToUse);
+      setCameraActive(true);
+    } catch {
+      setFeedback({
+        type: 'error',
+        title: 'Permiso de cámara bloqueado o no disponible',
+        detail:
+          'Habilitá el permiso de cámara en tu navegador o usá "Escanear desde foto" para tomar una foto al QR del cliente.',
+      });
+    }
+  };
+
+  const handleStartCamera = async () => {
+    await startCameraWithMode(cameraFacingMode);
+  };
+
+  const handleSwitchCamera = async () => {
+    const nextMode = cameraFacingMode === 'environment' ? 'user' : 'environment';
+    await startCameraWithMode(nextMode);
+  };
+
+  const handleScanFromImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    setFeedback(null);
+    const imgUrl = URL.createObjectURL(file);
+    try {
+      const img = new Image();
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error('No se pudo leer la imagen.'));
+        img.src = imgUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('No se pudo procesar la imagen.');
+
+      const maxDim = 1024;
+      const scale = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const w = Math.max(1, Math.floor(img.width * scale));
+      const h = Math.max(1, Math.floor(img.height * scale));
+      canvas.width = w;
+      canvas.height = h;
+      ctx.drawImage(img, 0, 0, w, h);
+
+      const imageData = ctx.getImageData(0, 0, w, h);
+      const qrResult = jsQR(imageData.data, w, h, { inversionAttempts: 'attemptBoth' });
+
+      if (qrResult && qrResult.data) {
+        stopCamera();
+        await handleValidateQrToken(qrResult.data, true);
+      } else {
+        setFeedback({
+          type: 'error',
+          title: 'No se detectó un código QR en la imagen',
+          detail: 'Intentá acercar más la cámara al código QR del cliente con buena iluminación.',
+        });
+      }
+    } catch (err: any) {
+      setFeedback({
+        type: 'error',
+        title: 'Error al leer imagen QR',
+        detail: err?.message || 'Intentá nuevamente.',
+      });
+    } finally {
+      URL.revokeObjectURL(imgUrl);
     }
   };
 
@@ -364,34 +571,76 @@ export const StaffRegisterPurchasePage: React.FC = () => {
                 )}
               </div>
 
+              {/* Hidden File Input for Direct Camera Capture / Photo QR Fallback */}
+              <input
+                ref={qrFileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleScanFromImageFile}
+                className="hidden"
+              />
+
               {/* Camera Scanner Button */}
               {!cameraActive ? (
-                <button
-                  type="button"
-                  onClick={handleStartCamera}
-                  className="w-full min-h-[48px] rounded-xl bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
-                >
-                  <Camera className="w-4 h-4" />
-                  <span>Activar Cámara para Escanear QR</span>
-                </button>
-              ) : (
                 <div className="space-y-2">
-                  <div className="relative rounded-xl overflow-hidden bg-black aspect-video">
+                  <button
+                    type="button"
+                    onClick={handleStartCamera}
+                    className="w-full min-h-[48px] rounded-xl bg-emerald-950 hover:bg-emerald-900 text-white text-xs font-semibold flex items-center justify-center gap-2.5 transition-colors cursor-pointer"
+                  >
+                    <Camera className="w-4 h-4" />
+                    <span>Activar Cámara para Escanear QR</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => qrFileInputRef.current?.click()}
+                    className="w-full min-h-[38px] rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center justify-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <ImageUp className="w-3.5 h-3.5 text-emerald-800" />
+                    <span>Tomar foto o subir imagen del QR</span>
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  <div className="relative rounded-xl overflow-hidden bg-slate-950 aspect-video border-2 border-emerald-700 shadow-inner">
                     <video
                       ref={videoRef}
                       autoPlay
                       playsInline
                       muted
+                      onLoadedMetadata={(e) => {
+                        e.currentTarget.play().catch(() => {});
+                      }}
                       className="w-full h-full object-cover"
                     />
+                    {/* Viewfinder Target Overlay */}
+                    <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center p-4">
+                      <div className="w-44 h-44 sm:w-48 sm:h-48 rounded-2xl border-2 border-emerald-400/90 shadow-[0_0_0_9999px_rgba(0,0,0,0.35)] relative">
+                        <div className="absolute inset-x-2 top-1/2 h-0.5 bg-emerald-400/80 animate-pulse" />
+                      </div>
+                      <span className="mt-2 px-2.5 py-1 rounded-md bg-slate-950/80 text-[11px] font-medium text-emerald-200">
+                        Apuntá al código QR del socio para seleccionarlo automáticamente
+                      </span>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={stopCamera}
-                    className="w-full min-h-[40px] rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-100 cursor-pointer"
-                  >
-                    Detener cámara
-                  </button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={handleSwitchCamera}
+                      className="min-h-[40px] rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold text-slate-700 hover:bg-slate-100 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-emerald-800" />
+                      <span>Cambiar cámara</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={stopCamera}
+                      className="min-h-[40px] rounded-xl border border-red-200 bg-red-50/60 text-xs font-semibold text-red-700 hover:bg-red-100 cursor-pointer"
+                    >
+                      Detener cámara
+                    </button>
+                  </div>
                 </div>
               )}
 

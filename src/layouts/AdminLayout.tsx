@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
+import { ZoomControls } from '../components/ZoomControls.tsx';
 import { OfflineIndicator } from '../components/OfflineIndicator.tsx';
 
 export type AdminSection =
@@ -78,10 +79,10 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
         <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200">
           <img
-            src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+            src="/images/mondino_app_logo.jpg"
             alt={settings.clubName}
             referrerPolicy="no-referrer"
-            className="w-9 h-9 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+            className="w-9 h-9 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
           />
           <div className="min-w-0">
             <span className="text-base font-bold tracking-tight text-emerald-950 font-display truncate block leading-tight">
@@ -155,6 +156,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
+            <ZoomControls />
             <PWAInstallButton />
 
             {/* Workspace Mode Switcher for Admin/Staff */}

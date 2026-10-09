@@ -8,13 +8,14 @@
     "secondaryColor": "#0F766E",
     "accentColor": "#D97706",
     "basePointsRateLocked": 100,
-    "birthdayBonusPoints": 200,
-    "referrerBonusPoints": 150,
-    "referredBonusPoints": 100,
+    "birthdayBonusPoints": 20,
+    "referrerBonusPoints": 15,
+    "referredBonusPoints": 10,
     "notificationsEnabled": true,
-    "whatsappContact": "+54 9 3492 42-0000",
-    "address": "Av. Santa Fe 1250, Rafaela, Santa Fe",
-    "openingHours": "Lun a Sáb de 08:00 a 21:00 hs"
+    "whatsappContact": "+54 9 03541 59-0624",
+    "address": "Av. San Martín 59, Villa Carlos Paz",
+    "openingHours": "Lun a Sáb de 09:00-23:00 hs  Dom de 09:00 -14:00hs y 17:00 -23:00hs",
+    "appLogoUrl": "/images/mondino_app_logo.jpg"
   },
   "profiles": [
     {

@@ -14,12 +14,22 @@ import {
   Cake,
   CheckCircle2,
   AlertCircle,
+  X,
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { UserRole } from '../types/index.ts';
 import { formatPoints, formatDateTimeES } from '../utils/points.ts';
 import { mondinoApi } from '../services/api.ts';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
+import { ZoomControls } from '../components/ZoomControls.tsx';
+import {
+  InAppPushBannerPayload,
+  hasPromptedForNotifications,
+  isDeviceNotificationsEnabled,
+  markNotificationPromptDismissed,
+  requestAndActivateNotifications,
+  triggerSystemAndInAppNotification,
+} from '../utils/notifications.ts';
 
 export type CustomerTab =
   | 'inicio'
@@ -49,11 +59,12 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     refreshAllData,
   } = useAuth();
   const [showNotifOpen, setShowNotifOpen] = useState(false);
-  const [browserPerm, setBrowserPerm] = useState<string>(() =>
-    typeof window !== 'undefined' && 'Notification' in window
-      ? Notification.permission
-      : 'unsupported'
+  const [deviceNotifsActive, setDeviceNotifsActive] = useState<boolean>(() =>
+    isDeviceNotificationsEnabled()
   );
+  const [showNotifPermissionModal, setShowNotifPermissionModal] = useState<boolean>(false);
+  const [activatingNotifs, setActivatingNotifs] = useState(false);
+  const [pushBanners, setPushBanners] = useState<InAppPushBannerPayload[]>([]);
 
   // Estado del modal obligatorio de completar datos al iniciar sesión por primera vez
   const [firstName, setFirstName] = useState('');
@@ -71,14 +82,54 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     setBirthDate(profile.birthDate || '');
   }, [profile?.id, profile?.updatedAt]);
 
-  if (!profile) return null;
+  useEffect(() => {
+    const onStatusChange = (e: Event) => {
+      const custom = e as CustomEvent<boolean>;
+      if (typeof custom.detail === 'boolean') {
+        setDeviceNotifsActive(custom.detail);
+      } else {
+        setDeviceNotifsActive(isDeviceNotificationsEnabled());
+      }
+    };
+
+    const onPushToast = (e: Event) => {
+      const custom = e as CustomEvent<InAppPushBannerPayload>;
+      if (!custom.detail) return;
+      const item = custom.detail;
+      setPushBanners((prev) => [item, ...prev.filter((p) => p.id !== item.id)].slice(0, 3));
+      window.setTimeout(() => {
+        setPushBanners((prev) => prev.filter((p) => p.id !== item.id));
+      }, 6500);
+    };
+
+    window.addEventListener('mondino-notif-status-change', onStatusChange);
+    window.addEventListener('mondino-push-toast', onPushToast);
+    return () => {
+      window.removeEventListener('mondino-notif-status-change', onStatusChange);
+      window.removeEventListener('mondino-push-toast', onPushToast);
+    };
+  }, []);
 
   const needsOnboardingData =
+    !profile ||
     !profile.birthDate?.trim() ||
     !profile.phone?.trim() ||
     !profile.firstName?.trim() ||
     profile.firstName.trim() === 'Cliente' ||
     !profile.lastName?.trim();
+
+  // Preguntar automáticamente al cliente si desea activar notificaciones una vez completados sus datos
+  useEffect(() => {
+    if (!profile || needsOnboardingData) return;
+    if (!isDeviceNotificationsEnabled() && !hasPromptedForNotifications()) {
+      const timer = window.setTimeout(() => {
+        setShowNotifPermissionModal(true);
+      }, 900);
+      return () => window.clearTimeout(timer);
+    }
+  }, [profile?.id, needsOnboardingData]);
+
+  if (!profile) return null;
 
   const existingBirthDateLocked = Boolean(profile.birthDate?.trim());
 
@@ -98,20 +149,38 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
     }
   };
 
-  const handleEnableBrowserNotifications = async () => {
-    if (typeof window === 'undefined' || !('Notification' in window)) return;
+  const handleAskEnableNotifications = () => {
+    setShowNotifPermissionModal(true);
+  };
+
+  const handleConfirmEnableNotifications = async () => {
+    setActivatingNotifs(true);
     try {
-      const perm = await Notification.requestPermission();
-      setBrowserPerm(perm);
-      if (perm === 'granted') {
-        new Notification(`Notificaciones activadas — ${settings.clubName}`, {
-          body: 'Te avisaremos cuando sumes puntos, en tu cumpleaños y ante nuevas promociones de la farmacia.',
-          icon: '/icon.svg',
-        });
-      }
+      await requestAndActivateNotifications(
+        settings.clubName,
+        settings.appLogoUrl || '/images/mondino_app_logo.jpg'
+      );
+      setDeviceNotifsActive(true);
+      setShowNotifPermissionModal(false);
     } catch (err) {
       console.error(err);
+    } finally {
+      setActivatingNotifs(false);
     }
+  };
+
+  const handleDismissNotificationsModal = () => {
+    markNotificationPromptDismissed();
+    setShowNotifPermissionModal(false);
+  };
+
+  const handleSendTestNotification = async () => {
+    await triggerSystemAndInAppNotification({
+      title: `Aviso de ${settings.clubName}`,
+      body: `Hola ${profile.firstName}, tus notificaciones están activas. Saldo actual: ${formatPoints(profile.pointsBalance)} puntos.`,
+      icon: settings.appLogoUrl || '/images/mondino_app_logo.jpg',
+      actionUrl: '/mi-qr',
+    });
   };
 
   const handleSaveOnboarding = async (e: React.FormEvent) => {
@@ -285,6 +354,118 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
         </div>
       )}
 
+      {/* Modal de pregunta para Activar Notificaciones */}
+      {!needsOnboardingData && showNotifPermissionModal && (
+        <div className="fixed inset-0 z-50 bg-slate-950/55 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center justify-center shrink-0">
+                  <Bell className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 font-display">
+                    ¿Querés activar las notificaciones?
+                  </h3>
+                  <p className="text-xs text-slate-500">{settings.clubName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleDismissNotificationsModal}
+                className="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Activá los avisos de <strong>{settings.clubSubtitle}</strong> para que te lleguen
+              notificaciones al instante cuando:
+            </p>
+
+            <ul className="text-xs text-slate-700 space-y-1.5 bg-slate-50 border border-slate-200/80 rounded-xl p-3">
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Sumes puntos en tus compras con código QR</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Sea el día de tu cumpleaños (+{settings.birthdayBonusPoints} puntos de regalo)</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                <span>Haya nuevas promociones, campañas o premios disponibles</span>
+              </li>
+            </ul>
+
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                type="button"
+                disabled={activatingNotifs}
+                onClick={handleConfirmEnableNotifications}
+                className="flex-1 py-2.5 px-4 rounded-xl bg-emerald-800 hover:bg-emerald-900 text-white text-xs font-semibold shadow-xs transition cursor-pointer"
+              >
+                {activatingNotifs ? 'Activando...' : 'Sí, activar notificaciones'}
+              </button>
+              <button
+                type="button"
+                onClick={handleDismissNotificationsModal}
+                className="py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 text-xs font-medium transition cursor-pointer"
+              >
+                Ahora no
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Push Notification Banner (Arrives immediately when notifications trigger) */}
+      {pushBanners.length > 0 && (
+        <div className="fixed top-4 right-4 left-4 sm:left-auto sm:w-96 z-50 space-y-2 pointer-events-none">
+          {pushBanners.map((banner) => (
+            <div
+              key={banner.id}
+              onClick={() => {
+                setPushBanners((prev) => prev.filter((p) => p.id !== banner.id));
+                if (banner.actionUrl === '/perfil') onSelectTab('perfil');
+                else if (banner.actionUrl === '/historial') onSelectTab('historial');
+                else if (banner.actionUrl === '/beneficios') onSelectTab('beneficios');
+                else if (banner.actionUrl === '/mi-qr') onSelectTab('mi-qr');
+                else if (banner.actionUrl === '/novedades') onSelectTab('novedades');
+              }}
+              className="pointer-events-auto bg-slate-900/95 text-white rounded-2xl border border-emerald-500/40 p-3.5 shadow-2xl flex items-start gap-3 cursor-pointer backdrop-blur-md"
+            >
+              <img
+                src="/images/mondino_app_logo.jpg"
+                alt={settings.clubName}
+                referrerPolicy="no-referrer"
+                className="w-10 h-10 rounded-xl object-contain bg-white border border-emerald-400/40 shrink-0"
+              />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-semibold text-emerald-300 truncate">
+                    Notificación · {settings.clubName}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPushBanners((prev) => prev.filter((p) => p.id !== banner.id));
+                    }}
+                    className="text-slate-400 hover:text-white p-0.5"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <p className="text-xs font-bold text-white mt-0.5">{banner.title}</p>
+                <p className="text-xs text-slate-200 mt-0.5 leading-snug">{banner.body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Role Switcher Banner if Staff or Admin is viewing Customer UI */}
       {(profile.role === UserRole.ADMINISTRADOR || profile.role === UserRole.EMPLEADO) && (
         <div className="bg-emerald-950 text-emerald-100 px-4 py-2 text-xs border-b border-emerald-900">
@@ -322,17 +503,17 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 
       {/* Top Header (3-Zone Contract) */}
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-6">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
           {/* Zone 1: Brand Identity */}
           <button
             onClick={() => onSelectTab('inicio')}
             className="flex items-center gap-3 text-left cursor-pointer whitespace-nowrap shrink-0"
           >
             <img
-              src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+              src="/images/mondino_app_logo.jpg"
               alt={settings.clubName}
               referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+              className="w-10 h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
             />
             <div>
               <span className="font-bold text-slate-900 text-base tracking-tight block leading-tight font-display">
@@ -365,7 +546,8 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           </nav>
 
           {/* Zone 3: Points Readout, Notifications & Logout */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <ZoomControls />
             <PWAInstallButton />
 
             <button
@@ -411,29 +593,36 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
                   </div>
 
                   {/* Estado de Notificaciones del Dispositivo */}
-                  {browserPerm !== 'unsupported' && (
-                    <div className="px-4 py-2.5 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between gap-2">
-                      {browserPerm === 'granted' ? (
+                  <div className="px-4 py-2.5 bg-emerald-50/70 border-b border-emerald-100 flex items-center justify-between gap-2">
+                    {deviceNotifsActive ? (
+                      <>
                         <span className="text-[11px] text-emerald-900 font-medium flex items-center gap-1.5">
                           <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
                           Avisos activos en este dispositivo
                         </span>
-                      ) : (
-                        <>
-                          <span className="text-[11px] text-slate-700">
-                            Recibí avisos de puntos y promos en tu celular
-                          </span>
-                          <button
-                            type="button"
-                            onClick={handleEnableBrowserNotifications}
-                            className="px-2.5 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-[11px] font-semibold shrink-0 cursor-pointer"
-                          >
-                            Activar avisos
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
+                        <button
+                          type="button"
+                          onClick={handleSendTestNotification}
+                          className="px-2 py-1 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-emerald-900 text-[10px] font-semibold shrink-0 cursor-pointer"
+                        >
+                          Probar aviso
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-[11px] text-slate-700">
+                          Recibí avisos de puntos y promos en tu celular
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleAskEnableNotifications}
+                          className="px-2.5 py-1 rounded-lg bg-emerald-800 hover:bg-emerald-900 text-white text-[11px] font-semibold shrink-0 cursor-pointer"
+                        >
+                          Activar avisos
+                        </button>
+                      </>
+                    )}
+                  </div>
 
                   <div className="max-h-[65vh] sm:max-h-80 overflow-y-auto divide-y divide-slate-100">
                     {myNotifications.length === 0 ? (

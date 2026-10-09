@@ -36,15 +36,11 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
   const [uploadingCardId, setUploadingCardId] = useState<string | null>(null);
   const [editingWebBanner, setEditingWebBanner] = useState(false);
   const [webBannerUrl, setWebBannerUrl] = useState(settings.logoUrl);
-  const [appLogoUrl, setAppLogoUrl] = useState(
-    settings.appLogoUrl || '/images/mondino_app_logo.jpg'
-  );
   const [savingWebBanner, setSavingWebBanner] = useState(false);
 
   useEffect(() => {
     setWebBannerUrl(settings.logoUrl);
-    setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
-  }, [settings.logoUrl, settings.appLogoUrl]);
+  }, [settings.logoUrl]);
 
   // Quick file input refs for 1-click photo replacement on cards
   const quickFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -134,13 +130,13 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
       await mondinoApi.updateSettingsAdmin({
         ...settings,
         logoUrl: webBannerUrl,
-        appLogoUrl,
+        appLogoUrl: '/images/mondino_app_logo.jpg',
       });
       await refreshAllData();
       setEditingWebBanner(false);
       setBanner({
         type: 'ok',
-        text: 'Logotipo de la app e imagen principal de la web actualizados correctamente.',
+        text: 'Imagen principal de la web actualizada correctamente.',
       });
     } catch (err: any) {
       setBanner({
@@ -262,10 +258,10 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <img
-                src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+                src="/images/mondino_app_logo.jpg"
                 alt={settings.clubName}
                 referrerPolicy="no-referrer"
-                className="w-14 h-14 rounded-xl object-cover border border-emerald-200 bg-white shrink-0"
+                className="w-14 h-14 rounded-xl object-contain bg-white border border-emerald-200 shrink-0"
               />
               <div className="w-20 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 hidden sm:block">
                 <SafeImage
@@ -277,13 +273,13 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
               <div>
                 <span className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1">
                   <ImageIcon className="w-3.5 h-3.5" />
-                  LOGOTIPO DE LA APP Y PORTADA DE LA WEB
+                  PORTADA PRINCIPAL DE LA WEB (LOGOTIPO OFICIAL PROGRAMADO)
                 </span>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">
                   Identidad Visual — {settings.clubName}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Subí el logotipo oficial de la app o cambiá la imagen de portada de la web.
+                  El logotipo oficial de Farmacia Mondino está programado de forma permanente. Aquí podés cambiar la foto de portada.
                 </p>
               </div>
             </div>
@@ -292,13 +288,12 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
               type="button"
               onClick={() => {
                 setWebBannerUrl(settings.logoUrl);
-                setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
                 setEditingWebBanner((prev) => !prev);
               }}
               className="min-h-[38px] px-3.5 py-2 rounded-xl border border-emerald-800 text-emerald-900 hover:bg-emerald-50 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-center cursor-pointer shrink-0"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>{editingWebBanner ? 'Cerrar editor' : 'Cambiar logotipo / portada'}</span>
+              <span>{editingWebBanner ? 'Cerrar editor' : 'Cambiar portada'}</span>
             </button>
           </div>
 
@@ -307,12 +302,6 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
               onSubmit={handleSaveWebBanner}
               className="pt-3 border-t border-slate-100 space-y-4"
             >
-              <ImageUploaderField
-                label="Logotipo Oficial de la App (Cabecera, Credencial QR e Ícono)"
-                value={appLogoUrl}
-                onChange={setAppLogoUrl}
-                helperText="Subí aquí el logotipo de Farmacia Mondino (por ejemplo tu imagen images.jpeg)."
-              />
               <ImageUploaderField
                 label="Imagen Principal de Portada de la Web"
                 value={webBannerUrl}
@@ -332,7 +321,7 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
                   disabled={savingWebBanner}
                   className="min-h-[38px] px-4 py-1.5 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer"
                 >
-                  {savingWebBanner ? 'Guardando...' : 'Guardar logotipo y portada'}
+                  {savingWebBanner ? 'Guardando...' : 'Guardar portada'}
                 </button>
               </div>
             </form>
