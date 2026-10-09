@@ -72,9 +72,11 @@ function formatOAuthErrorMessage(rawError: string): string {
   return decoded;
 }
 
-function dispatchNativeBrowserNotifications(items: NotificationItem[]) {
+function dispatchNativeBrowserNotifications(items: NotificationItem[], iconUrl?: string) {
   if (typeof window === 'undefined' || !('Notification' in window)) return;
   if (Notification.permission !== 'granted') return;
+
+  const effectiveIcon = iconUrl || '/images/mondino_app_logo.jpg';
 
   try {
     const seenRaw = sessionStorage.getItem('mondino_pushed_notifs') || '[]';
@@ -87,8 +89,8 @@ function dispatchNativeBrowserNotifications(items: NotificationItem[]) {
         updated = true;
         new Notification(item.title, {
           body: item.message,
-          icon: '/icon.svg',
-          badge: '/icon.svg',
+          icon: effectiveIcon,
+          badge: effectiveIcon,
         });
       }
     }
@@ -117,6 +119,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [referrals, setReferrals] = useState<ReferralRecord[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [adminData, setAdminData] = useState<AdminDataBundle | null>(null);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const logoHref = settings.appLogoUrl || '/images/mondino_app_logo.jpg';
+    const iconLinks = document.querySelectorAll<HTMLLinkElement>(
+      'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+    );
+    iconLinks.forEach((link) => {
+      link.href = logoHref;
+    });
+  }, [settings.appLogoUrl]);
 
   const loadPublicCatalog = useCallback(async () => {
     try {
@@ -198,6 +211,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     async function initialize() {
       try {
+        if (typeof window !== 'undefined') {
+          const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+          const searchParams = new URLSearchParams(window.location.search.replace(/^\?/, ''));
+          const urlOAuthError =
+            searchParams.get('error_description') ||
+            hashParams.get('error_description') ||
+            searchParams.get('error') ||
+            hashParams.get('error');
+
+          if (urlOAuthError) {
+            setAuthError(formatOAuthErrorMessage(urlOAuthError));
+            try {
+              window.history.replaceState({}, document.title, window.location.pathname);
+            } catch {
+              // ignore history replace errors
+            }
+          }
+        }
         await refreshAllData();
       } finally {
         if (mounted) setLoadingAuth(false);
@@ -224,7 +255,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const isInStudioPreview =
           typeof window !== 'undefined' &&
           (window.self !== window.top || window.location.hostname.startsWith('ais-dev-'));
-        if (isInStudioPreview && (oauthError.includes('access_denied') || oauthError.includes('403'))) {
+        if (
+          isInStudioPreview &&
+          (oauthError.includes('access_denied') || oauthError.includes('403'))
+        ) {
           try {
             await mondinoApi.startGoogleBackendSession('santinomondi2010@gmail.com');
             await refreshAllData();
@@ -262,7 +296,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await refreshAllData();
         }
       } catch (err: any) {
-        setAuthError(formatOAuthErrorMessage(err?.message || 'Error al completar el inicio de sesión con Google.'));
+        setAuthError(
+          formatOAuthErrorMessage(
+            err?.message || 'Error al completar el inicio de sesión con Google.'
+          )
+        );
       } finally {
         if (mounted) setLoadingAuth(false);
       }
@@ -310,14 +348,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ): Promise<{ ok: boolean; message: string }> => {
     setAuthError(null);
 
-    // Si se solicita un usuario de prueba explícito en el entorno de vista previa (Google AI Studio)
     if (emailHint) {
       try {
         await mondinoApi.startGoogleBackendSession(emailHint);
         await refreshAllData();
         return { ok: true, message: 'Sesión iniciada correctamente.' };
       } catch (err: any) {
-        const msg = err?.message || 'No se pudo iniciar la sesión de vista previa.';
+        const msg = err?.message || 'No se pudo iniciar la sesión.';
         setAuthError(msg);
         return { ok: false, message: msg };
       }
@@ -327,7 +364,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const isInIframe = typeof window !== 'undefined' && window.self !== window.top;
 
-        // En el iframe de Google AI Studio es obligatorio abrir Google OAuth en una ventana emergente (popup)
+        // En un iframe (Google AI Studio preview) se abre Google OAuth en una ventana emergente (popup)
         // porque Google bloquea accounts.google.com dentro de iframes (X-Frame-Options: DENY / Error 403).
         if (isInIframe) {
           const redirectTo = `${window.location.origin}/auth/callback`;
@@ -358,7 +395,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
             if (!popup) {
               const msg =
-                'Tu navegador bloqueó la ventana emergente de Google. Permití las ventanas emergentes (popups) para este sitio o utilizá los botones de acceso directo en AI Studio debajo.';
+                'Tu navegador bloqueó la ventana emergente de Google. Permití las ventanas emergentes (popups) para este sitio e intentá nuevamente.';
               setAuthError(msg);
               return { ok: false, message: msg };
             }
@@ -370,7 +407,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
 
-        // Fuera de un iframe (producción en Vercel / PWA instalada), redirección directa estándar
+        // Fuera de un iframe (producción en Vercel / PWA instalada), redirección directa nativa de Supabase Auth
         const redirectTo = `${window.location.origin}${window.location.pathname}`;
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
@@ -399,7 +436,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     }
 
-    // Fallback cuando aún no están cargadas VITE_SUPABASE_URL / ANON_KEY
     try {
       await mondinoApi.startGoogleBackendSession(emailHint);
       await refreshAllData();

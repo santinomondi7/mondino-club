@@ -137,12 +137,6 @@ apiApp.get('/api/health', (_req, res) => {
 
 // Google session endpoint for AI Studio Preview environment (when testing inside iframe)
 apiApp.post('/api/auth/google-session', (req, res) => {
-  if (process.env.VERCEL) {
-    res.status(400).json({
-      error: 'Utilizá el flujo OAuth nativo de Supabase Auth en producción.',
-    });
-    return;
-  }
   try {
     const email = req.body?.email ? String(req.body.email) : undefined;
     const session = previewSignInWithGoogle(email);

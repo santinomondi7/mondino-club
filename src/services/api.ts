@@ -1,8 +1,11 @@
 import { supabase, isSupabaseConfigured } from '../lib/supabase.ts';
 import {
   BASE_PESOS_PER_POINT,
+  DEFAULT_APP_LOGO_URL,
   DEFAULT_APP_SETTINGS,
   GENERATED_IMAGES,
+  decodeLogoAndBanner,
+  encodeLogoAndBanner,
 } from '../constants/index.ts';
 import {
   AccountStatus,
@@ -319,11 +322,13 @@ function mapAuditRow(row: Record<string, any>): AuditLogRecord {
 
 function mapSettingsRow(row?: Record<string, any> | null): AppSettings {
   if (!row) return DEFAULT_APP_SETTINGS;
+  const decodedLogos = decodeLogoAndBanner(row.logo_url);
   return {
     id: row.id || DEFAULT_APP_SETTINGS.id,
     clubName: row.club_name || DEFAULT_APP_SETTINGS.clubName,
     clubSubtitle: row.club_subtitle || DEFAULT_APP_SETTINGS.clubSubtitle,
-    logoUrl: row.logo_url || DEFAULT_APP_SETTINGS.logoUrl,
+    logoUrl: decodedLogos.logoUrl,
+    appLogoUrl: decodedLogos.appLogoUrl,
     primaryColor: row.primary_color || DEFAULT_APP_SETTINGS.primaryColor,
     secondaryColor: row.secondary_color || DEFAULT_APP_SETTINGS.secondaryColor,
     accentColor: row.accent_color || DEFAULT_APP_SETTINGS.accentColor,
@@ -967,7 +972,10 @@ export const mondinoApi = {
       const payload = {
         club_name: settings.clubName,
         club_subtitle: settings.clubSubtitle,
-        logo_url: settings.logoUrl,
+        logo_url: encodeLogoAndBanner(
+          settings.logoUrl,
+          settings.appLogoUrl || DEFAULT_APP_LOGO_URL
+        ),
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         accent_color: settings.accentColor,

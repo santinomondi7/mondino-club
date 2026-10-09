@@ -326,12 +326,20 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           {/* Zone 1: Brand Identity */}
           <button
             onClick={() => onSelectTab('inicio')}
-            className="text-left cursor-pointer whitespace-nowrap shrink-0"
+            className="flex items-center gap-3 text-left cursor-pointer whitespace-nowrap shrink-0"
           >
-            <span className="font-bold text-slate-900 text-base tracking-tight block leading-tight font-display">
-              {settings.clubName}
-            </span>
-            <span className="text-[11px] text-slate-500 block">{settings.clubSubtitle}</span>
+            <img
+              src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+              alt={settings.clubName}
+              referrerPolicy="no-referrer"
+              className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+            />
+            <div>
+              <span className="font-bold text-slate-900 text-base tracking-tight block leading-tight font-display">
+                {settings.clubName}
+              </span>
+              <span className="text-[11px] text-slate-500 block">{settings.clubSubtitle}</span>
+            </div>
           </button>
 
           {/* Zone 2: Desktop Primary Navigation */}

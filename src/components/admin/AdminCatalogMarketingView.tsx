@@ -36,11 +36,15 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
   const [uploadingCardId, setUploadingCardId] = useState<string | null>(null);
   const [editingWebBanner, setEditingWebBanner] = useState(false);
   const [webBannerUrl, setWebBannerUrl] = useState(settings.logoUrl);
+  const [appLogoUrl, setAppLogoUrl] = useState(
+    settings.appLogoUrl || '/images/mondino_app_logo.jpg'
+  );
   const [savingWebBanner, setSavingWebBanner] = useState(false);
 
   useEffect(() => {
     setWebBannerUrl(settings.logoUrl);
-  }, [settings.logoUrl]);
+    setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
+  }, [settings.logoUrl, settings.appLogoUrl]);
 
   // Quick file input refs for 1-click photo replacement on cards
   const quickFileInputRef = useRef<HTMLInputElement | null>(null);
@@ -130,12 +134,13 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
       await mondinoApi.updateSettingsAdmin({
         ...settings,
         logoUrl: webBannerUrl,
+        appLogoUrl,
       });
       await refreshAllData();
       setEditingWebBanner(false);
       setBanner({
         type: 'ok',
-        text: 'Imagen principal de la web actualizada correctamente.',
+        text: 'Logotipo de la app e imagen principal de la web actualizados correctamente.',
       });
     } catch (err: any) {
       setBanner({
@@ -251,12 +256,18 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
         </div>
       )}
 
-      {/* Tarjeta de Imagen Principal de la Web (Editable por Administrador y Empleados) */}
+      {/* Tarjeta de Logotipo de la App e Imagen Principal de la Web (Editable por Administrador y Empleados) */}
       {(section === 'beneficios' || section === 'novedades' || section === 'promociones') && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
-              <div className="w-20 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0">
+              <img
+                src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+                alt={settings.clubName}
+                referrerPolicy="no-referrer"
+                className="w-14 h-14 rounded-xl object-cover border border-emerald-200 bg-white shrink-0"
+              />
+              <div className="w-20 h-14 rounded-xl overflow-hidden border border-slate-200 bg-slate-100 shrink-0 hidden sm:block">
                 <SafeImage
                   src={settings.logoUrl}
                   alt="Imagen de Portada de Mondino Club"
@@ -266,14 +277,13 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
               <div>
                 <span className="text-[11px] font-semibold text-emerald-800 flex items-center gap-1">
                   <ImageIcon className="w-3.5 h-3.5" />
-                  IMAGEN DE PORTADA DE LA WEB (CLIENTES)
+                  LOGOTIPO DE LA APP Y PORTADA DE LA WEB
                 </span>
                 <h2 className="text-sm sm:text-base font-bold text-slate-900">
-                  Banner Principal de Bienvenida — {settings.clubName}
+                  Identidad Visual — {settings.clubName}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Tanto el Administrador como los Empleados pueden cambiar esta imagen cuando
-                  quieran.
+                  Subí el logotipo oficial de la app o cambiá la imagen de portada de la web.
                 </p>
               </div>
             </div>
@@ -282,25 +292,32 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
               type="button"
               onClick={() => {
                 setWebBannerUrl(settings.logoUrl);
+                setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
                 setEditingWebBanner((prev) => !prev);
               }}
               className="min-h-[38px] px-3.5 py-2 rounded-xl border border-emerald-800 text-emerald-900 hover:bg-emerald-50 text-xs font-semibold flex items-center gap-1.5 self-start sm:self-center cursor-pointer shrink-0"
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>{editingWebBanner ? 'Cerrar editor' : 'Cambiar imagen de la web'}</span>
+              <span>{editingWebBanner ? 'Cerrar editor' : 'Cambiar logotipo / portada'}</span>
             </button>
           </div>
 
           {editingWebBanner && (
             <form
               onSubmit={handleSaveWebBanner}
-              className="pt-3 border-t border-slate-100 space-y-3"
+              className="pt-3 border-t border-slate-100 space-y-4"
             >
               <ImageUploaderField
-                label="Seleccionar nueva imagen principal de la web"
+                label="Logotipo Oficial de la App (Cabecera, Credencial QR e Ícono)"
+                value={appLogoUrl}
+                onChange={setAppLogoUrl}
+                helperText="Subí aquí el logotipo de Farmacia Mondino (por ejemplo tu imagen images.jpeg)."
+              />
+              <ImageUploaderField
+                label="Imagen Principal de Portada de la Web"
                 value={webBannerUrl}
                 onChange={setWebBannerUrl}
-                helperText="Esta imagen se muestra en el panel principal de los socios al iniciar sesión."
+                helperText="Esta imagen se muestra en el banner principal de los socios al iniciar sesión."
               />
               <div className="flex justify-end gap-2">
                 <button
@@ -315,7 +332,7 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
                   disabled={savingWebBanner}
                   className="min-h-[38px] px-4 py-1.5 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer"
                 >
-                  {savingWebBanner ? 'Guardando...' : 'Guardar imagen de portada'}
+                  {savingWebBanner ? 'Guardando...' : 'Guardar logotipo y portada'}
                 </button>
               </div>
             </form>

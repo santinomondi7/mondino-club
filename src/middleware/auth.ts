@@ -7,21 +7,36 @@ export interface VerifiedAuthContext {
   adminClient: SupabaseClient;
 }
 
+const DEFAULT_PUBLIC_SUPABASE_URL = 'https://vpjwmarisctnqjzpyakz.supabase.co';
+const DEFAULT_PUBLIC_SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwandtYXJpc2N0bnFqenB5YWt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MDc0ODgsImV4cCI6MjEwNzA4MzQ4OH0.QJ7wIXI4t0u9aNgp-QQdbfYrFN_KpFYLMnVJFdz7iV4';
+
 export function getServerSupabaseConfig() {
-  const url = (process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '').trim();
-  const anonKey = (
+  const rawUrl = (
+    process.env.SUPABASE_URL ||
+    process.env.VITE_SUPABASE_URL ||
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    ''
+  ).trim();
+  const rawAnonKey = (
     process.env.SUPABASE_ANON_KEY ||
     process.env.VITE_SUPABASE_ANON_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     ''
   ).trim();
   const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
-  const isConfigured = Boolean(
-    url &&
-      anonKey &&
-      url !== 'https://tu-proyecto.supabase.co' &&
-      anonKey !== 'tu-anon-public-key'
-  );
+  const url =
+    rawUrl && rawUrl !== 'https://tu-proyecto.supabase.co'
+      ? rawUrl
+      : DEFAULT_PUBLIC_SUPABASE_URL;
+
+  const anonKey =
+    rawAnonKey && rawAnonKey !== 'tu-anon-public-key' && rawAnonKey !== 'tu-supabase-anon-key'
+      ? rawAnonKey
+      : DEFAULT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const isConfigured = Boolean(url && anonKey);
 
   return {
     url,

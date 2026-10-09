@@ -40,7 +40,13 @@ export const CustomerQRPage: React.FC = () => {
             : 'bg-white border-slate-200 shadow-xs'
         }`}
       >
-        <div className="space-y-1 mb-6">
+        <div className="flex flex-col items-center space-y-1.5 mb-6">
+          <img
+            src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+            alt={settings.clubName}
+            referrerPolicy="no-referrer"
+            className="w-14 h-14 rounded-2xl object-cover border border-emerald-200 shadow-xs mb-1"
+          />
           <p className="text-lg font-bold text-slate-900">
             {profile.firstName} {profile.lastName}
           </p>

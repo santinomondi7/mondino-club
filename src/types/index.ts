@@ -195,6 +195,7 @@ export interface AppSettings {
   clubName: string;
   clubSubtitle: string;
   logoUrl: string;
+  appLogoUrl?: string;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;

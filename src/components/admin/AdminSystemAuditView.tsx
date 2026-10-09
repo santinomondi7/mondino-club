@@ -38,6 +38,9 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
   const [clubName, setClubName] = useState(settings.clubName);
   const [clubSubtitle, setClubSubtitle] = useState(settings.clubSubtitle);
   const [logoUrl, setLogoUrl] = useState(settings.logoUrl);
+  const [appLogoUrl, setAppLogoUrl] = useState(
+    settings.appLogoUrl || '/images/mondino_app_logo.jpg'
+  );
   const [primaryColor, setPrimaryColor] = useState(settings.primaryColor);
   const [secondaryColor, setSecondaryColor] = useState(settings.secondaryColor);
   const [accentColor, setAccentColor] = useState(settings.accentColor);
@@ -49,6 +52,7 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
     setClubName(settings.clubName);
     setClubSubtitle(settings.clubSubtitle);
     setLogoUrl(settings.logoUrl);
+    setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
     setPrimaryColor(settings.primaryColor);
     setSecondaryColor(settings.secondaryColor);
     setAccentColor(settings.accentColor);
@@ -103,6 +107,7 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
         clubName,
         clubSubtitle,
         logoUrl,
+        appLogoUrl,
         primaryColor,
         secondaryColor,
         accentColor,
@@ -117,7 +122,7 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
       await refreshAllData();
       setBanner({
         type: 'ok',
-        text: 'Configuración general e imagen de la web actualizadas. Las reglas de puntos ($100 = 1 pto, cumpleaños 20 pts, invitar 15 pts, invitado 10 pts) permanecen protegidas.',
+        text: 'Configuración general, logotipo de la app e imagen de la web actualizados correctamente.',
       });
     } catch (err: any) {
       setBanner({ type: 'err', text: err.message });
@@ -590,6 +595,13 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+            <ImageUploaderField
+              label="Logotipo Oficial de la App (Cabecera, Credencial QR e Ícono)"
+              value={appLogoUrl}
+              onChange={setAppLogoUrl}
+              helperText="Subí el logotipo cuadrado de Farmacia Mondino (por ejemplo tu archivo images.jpeg). Se mostrará en toda la app y en el ícono del navegador."
+            />
+
             <ImageUploaderField
               label="Imagen Principal de Portada de la Web"
               value={logoUrl}

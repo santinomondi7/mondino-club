@@ -465,6 +465,9 @@ function normalizePreviewSettings(state: PreviewDatabaseState): void {
     state.settings = { ...DEFAULT_APP_SETTINGS };
     return;
   }
+  if (!state.settings.appLogoUrl) {
+    state.settings.appLogoUrl = DEFAULT_APP_SETTINGS.appLogoUrl;
+  }
   state.settings.birthdayBonusPoints = BIRTHDAY_BONUS_POINTS;
   state.settings.referrerBonusPoints = REFERRER_BONUS_POINTS;
   state.settings.referredBonusPoints = REFERRED_BONUS_POINTS;
@@ -1596,10 +1599,14 @@ export function previewUpdateSettingsAdmin(
       referredBonusPoints: REFERRED_BONUS_POINTS, // 10 puntos por ser invitado
     };
   } else {
-    // Empleado puede actualizar la imagen principal de la web (logoUrl)
+    // Empleado puede actualizar la imagen principal de la web (logoUrl) y el logotipo de la app (appLogoUrl)
     state.settings = {
       ...state.settings,
       logoUrl: updates.logoUrl || state.settings.logoUrl,
+      appLogoUrl:
+        updates.appLogoUrl ||
+        state.settings.appLogoUrl ||
+        DEFAULT_APP_SETTINGS.appLogoUrl,
       basePointsRateLocked: BASE_PESOS_PER_POINT,
       birthdayBonusPoints: BIRTHDAY_BONUS_POINTS,
       referrerBonusPoints: REFERRER_BONUS_POINTS,

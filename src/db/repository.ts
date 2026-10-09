@@ -5,10 +5,13 @@ import {
 import {
   BASE_PESOS_PER_POINT,
   BIRTHDAY_BONUS_POINTS,
+  DEFAULT_APP_LOGO_URL,
   DEFAULT_APP_SETTINGS,
   GENERATED_IMAGES,
   REFERRER_BONUS_POINTS,
   REFERRED_BONUS_POINTS,
+  decodeLogoAndBanner,
+  encodeLogoAndBanner,
 } from '../constants/index.ts';
 import {
   AccountStatus,
@@ -270,11 +273,14 @@ export function mapSettingsRow(row?: Record<string, any> | null): AppSettings {
     rawHours === 'Lun a Sáb de 8:00 a 21:00 hs' ||
     rawHours === 'Lun a Sáb de 08:00 a 21:00 hs';
 
+  const decodedLogos = decodeLogoAndBanner(row.logo_url);
+
   return {
     id: row.id || DEFAULT_APP_SETTINGS.id,
     clubName: row.club_name || DEFAULT_APP_SETTINGS.clubName,
     clubSubtitle: row.club_subtitle || DEFAULT_APP_SETTINGS.clubSubtitle,
-    logoUrl: row.logo_url || DEFAULT_APP_SETTINGS.logoUrl,
+    logoUrl: decodedLogos.logoUrl,
+    appLogoUrl: decodedLogos.appLogoUrl,
     primaryColor: row.primary_color || DEFAULT_APP_SETTINGS.primaryColor,
     secondaryColor: row.secondary_color || DEFAULT_APP_SETTINGS.secondaryColor,
     accentColor: row.accent_color || DEFAULT_APP_SETTINGS.accentColor,
@@ -959,9 +965,12 @@ export async function updateSettingsAdminInSupabase(
   const currentCatalog = await getPublicCatalogFromSupabase(auth.userClient);
   const current = currentCatalog.settings;
 
-  // Empleados pueden actualizar la imagen principal de la web (logoUrl);
+  // Empleados y Administrador pueden actualizar la imagen principal de la web (logoUrl) y el logotipo de la app (appLogoUrl);
   // Administrador puede actualizar todos los parámetros globales (excepto la regla base inmutable $100 = 1 pto)
   const isFullAdmin = actor.role === UserRole.ADMINISTRADOR;
+  const nextBannerUrl = settings.logoUrl || current.logoUrl || DEFAULT_APP_SETTINGS.logoUrl;
+  const nextAppLogoUrl =
+    settings.appLogoUrl || current.appLogoUrl || DEFAULT_APP_LOGO_URL;
 
   const payload = {
     id: 'mondino-global-settings',
@@ -969,7 +978,7 @@ export async function updateSettingsAdminInSupabase(
     club_subtitle: isFullAdmin
       ? settings.clubSubtitle || current.clubSubtitle
       : current.clubSubtitle,
-    logo_url: settings.logoUrl || current.logoUrl || DEFAULT_APP_SETTINGS.logoUrl,
+    logo_url: encodeLogoAndBanner(nextBannerUrl, nextAppLogoUrl),
     primary_color: isFullAdmin
       ? settings.primaryColor || current.primaryColor
       : current.primaryColor,

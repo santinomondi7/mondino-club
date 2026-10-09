@@ -47,6 +47,9 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
 
   const [editingCover, setEditingCover] = useState(false);
   const [coverUrl, setCoverUrl] = useState(settings.logoUrl);
+  const [appLogoUrl, setAppLogoUrl] = useState(
+    settings.appLogoUrl || '/images/mondino_app_logo.jpg'
+  );
   const [savingCover, setSavingCover] = useState(false);
   const [uploadingQuickId, setUploadingQuickId] = useState<string | null>(null);
   const [claimingBirthday, setClaimingBirthday] = useState(false);
@@ -100,17 +103,18 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
       await mondinoApi.updateSettingsAdmin({
         ...settings,
         logoUrl: coverUrl,
+        appLogoUrl,
       });
       await refreshAllData();
       setEditingCover(false);
       setBannerMsg({
         type: 'ok',
-        text: 'Imagen de portada de la web actualizada correctamente.',
+        text: 'Logotipo de la app e imagen de portada actualizados correctamente.',
       });
     } catch (err: any) {
       setBannerMsg({
         type: 'err',
-        text: err?.message || 'No se pudo guardar la imagen de la web.',
+        text: err?.message || 'No se pudo guardar la imagen.',
       });
     } finally {
       setSavingCover(false);
@@ -292,12 +296,13 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
                 type="button"
                 onClick={() => {
                   setCoverUrl(settings.logoUrl);
+                  setAppLogoUrl(settings.appLogoUrl || '/images/mondino_app_logo.jpg');
                   setEditingCover((prev) => !prev);
                 }}
                 className="min-h-[38px] px-3.5 py-2 rounded-xl bg-slate-900/85 hover:bg-slate-900 text-white text-xs font-semibold flex items-center gap-1.5 backdrop-blur-xs shadow-sm cursor-pointer shrink-0 whitespace-nowrap"
               >
                 <Upload className="w-3.5 h-3.5" />
-                <span>{editingCover ? 'Cerrar editor' : 'Cambiar imagen de la web'}</span>
+                <span>{editingCover ? 'Cerrar editor' : 'Cambiar logotipo / portada'}</span>
               </button>
             )}
           </div>
@@ -311,7 +316,7 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                 <ImageIcon className="w-4 h-4 text-emerald-800" />
-                Modificar Imagen Principal de la Web (Administrador / Empleados)
+                Modificar Logotipo de la App e Imagen Principal de la Web (Administrador / Empleados)
               </span>
               <button
                 type="button"
@@ -321,6 +326,13 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
                 Cancelar
               </button>
             </div>
+
+            <ImageUploaderField
+              label="Logotipo Oficial de la App (Cabecera, Credencial QR e Ícono)"
+              value={appLogoUrl}
+              onChange={setAppLogoUrl}
+              helperText="Subí aquí el logotipo de Farmacia Mondino (por ejemplo tu imagen images.jpeg)."
+            />
 
             <ImageUploaderField
               label="Subir nueva foto de portada para la web"
@@ -342,7 +354,7 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
                 disabled={savingCover}
                 className="min-h-[38px] px-4 py-1.5 rounded-xl bg-emerald-900 hover:bg-emerald-800 text-white text-xs font-semibold cursor-pointer"
               >
-                {savingCover ? 'Guardando...' : 'Guardar imagen de la web'}
+                {savingCover ? 'Guardando...' : 'Guardar logotipo y portada'}
               </button>
             </div>
           </form>

@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   AlertCircle,
   LogIn,
-  UserCheck,
   HeartHandshake,
 } from 'lucide-react';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
@@ -53,15 +52,15 @@ export const LoginPage: React.FC = () => {
     typeof window !== 'undefined' &&
     (window.self !== window.top || window.location.hostname.startsWith('ais-dev-'));
 
-  const handleGoogleSignIn = async (emailHint?: string) => {
+  const handleGoogleSignIn = async () => {
     setErrorMsg('');
     setInfoMsg('');
     setIsSubmitting(true);
     try {
-      const res = await loginWithGoogle(emailHint);
+      const res = await loginWithGoogle();
       if (!res.ok) {
         setErrorMsg(res.message);
-      } else if (!emailHint && isIframePreview && isSupabaseReady) {
+      } else if (isIframePreview && isSupabaseReady && res.message) {
         setInfoMsg(res.message);
       }
     } finally {
@@ -77,10 +76,23 @@ export const LoginPage: React.FC = () => {
       {/* Top Navbar (Strict 3-Zone Contract) */}
       <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
-          {/* Zone 1: Brand Wordmark */}
-          <span className="font-bold text-emerald-950 tracking-tight text-lg font-display whitespace-nowrap shrink-0">
-            {settings.clubName}
-          </span>
+          {/* Zone 1: Brand Logo & Wordmark */}
+          <div className="flex items-center gap-3 shrink-0">
+            <img
+              src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+              alt={settings.clubName}
+              referrerPolicy="no-referrer"
+              className="w-10 h-10 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+            />
+            <div>
+              <span className="font-bold text-emerald-950 tracking-tight text-lg font-display whitespace-nowrap block leading-tight">
+                {settings.clubName}
+              </span>
+              <span className="text-[11px] text-slate-500 block leading-tight">
+                {settings.clubSubtitle}
+              </span>
+            </div>
+          </div>
 
           {/* Zone 2: Clean Inline Contact Metadata */}
           <div className="hidden md:flex items-center gap-6 text-xs text-slate-600">
@@ -253,14 +265,22 @@ export const LoginPage: React.FC = () => {
         {/* Right Column: Auth Card */}
         <div className="lg:col-span-5">
           <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xl p-6 sm:p-8">
-            <div className="mb-6">
-              <h2 className="text-xl font-bold text-slate-900 font-display">
-                Ingresar a {settings.clubName}
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">
-                Iniciá sesión de forma segura con tu cuenta de Google. Si es tu primera vez, tu
-                tarjeta digital y tu QR se crean automáticamente.
-              </p>
+            <div className="mb-6 flex items-center gap-3.5">
+              <img
+                src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+                alt={settings.clubName}
+                referrerPolicy="no-referrer"
+                className="w-14 h-14 rounded-2xl object-cover border border-emerald-200 shadow-xs shrink-0"
+              />
+              <div>
+                <h2 className="text-xl font-bold text-slate-900 font-display">
+                  Ingresar a {settings.clubName}
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Iniciá sesión de forma segura con tu cuenta de Google. Si es tu primera vez, tu
+                  tarjeta digital y tu QR se crean automáticamente.
+                </p>
+              </div>
             </div>
 
             {activeError && (
@@ -290,81 +310,14 @@ export const LoginPage: React.FC = () => {
                   : 'Continuar con Google'}
               </button>
 
-              {(!isSupabaseReady || isIframePreview) && (
-                <div className="pt-3 border-t border-slate-100 space-y-2">
-                  <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1.5">
-                    <UserCheck className="w-3.5 h-3.5 text-emerald-700" />
-                    Acceso directo en Google AI Studio (Probar roles al instante):
-                  </span>
-                  <div className="grid grid-cols-1 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleGoogleSignIn('santinomondi2010@gmail.com')}
-                      disabled={isSubmitting}
-                      className="w-full text-left px-3.5 py-2.5 rounded-xl border border-emerald-200 bg-emerald-50/40 hover:border-emerald-700 hover:bg-emerald-50 text-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div>
-                        <span className="font-semibold text-slate-900 block">
-                          Santino Mondino (Rol: ADMINISTRADOR)
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          santinomondi2010@gmail.com · Control Total, Fotos y Auditoría
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-800 whitespace-nowrap">
-                        Ingresar →
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleGoogleSignIn('mostrador@farmaciamondino.com')}
-                      disabled={isSubmitting}
-                      className="w-full text-left px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-emerald-700 hover:bg-emerald-50/50 text-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div>
-                        <span className="font-semibold text-slate-900 block">
-                          Lucía Peralta (Rol: EMPLEADO)
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          mostrador@farmaciamondino.com · Escáner QR, Beneficios y Novedades
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-800 whitespace-nowrap">
-                        Ingresar →
-                      </span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => handleGoogleSignIn('valeria.gomez@gmail.com')}
-                      disabled={isSubmitting}
-                      className="w-full text-left px-3.5 py-2.5 rounded-xl border border-slate-200 hover:border-emerald-700 hover:bg-emerald-50/50 text-xs flex items-center justify-between transition cursor-pointer"
-                    >
-                      <div>
-                        <span className="font-semibold text-slate-900 block">
-                          Valeria Gómez (Rol: CLIENTE)
-                        </span>
-                        <span className="text-[11px] text-slate-500">
-                          valeria.gomez@gmail.com · QR: MND-QR-CLI01-74829B
-                        </span>
-                      </div>
-                      <span className="text-[11px] font-bold text-emerald-800 whitespace-nowrap">
-                        Ingresar →
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               <div className="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200/70 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-semibold text-emerald-950">
                   <CheckCircle2 className="w-4 h-4 text-emerald-700 shrink-0" />
-                  Autenticación Segura (Supabase Auth + Google OAuth)
+                  Autenticación Oficial con Google
                 </div>
                 <p className="text-[11px] text-emerald-900/80 leading-relaxed">
-                  Tus puntos, código QR personal, canjes y compras están respaldados en PostgreSQL
-                  con validación criptográfica y políticas Row Level Security (RLS).
+                  Tus puntos, código QR personal, canjes y compras están respaldados de forma
+                  segura y sincronizados en tiempo real.
                 </p>
               </div>
             </div>

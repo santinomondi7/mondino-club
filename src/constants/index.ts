@@ -40,7 +40,10 @@ export const CAMPAIGN_SEGMENTS = [
   { id: 'INTERES_PERFUMERIA', label: 'Clientes con compras en Perfumería y Dermocosmética' },
 ] as const;
 
+export const DEFAULT_APP_LOGO_URL = '/images/mondino_app_logo.jpg' as const;
+
 export const GENERATED_IMAGES = {
+  appLogo: DEFAULT_APP_LOGO_URL,
   heroPerfumery: '/images/hero_perfumery_banner.jpg',
   benefitSkincare: '/images/benefit_skincare_kit.jpg',
   benefitFragrance: '/images/benefit_fragrance_voucher.jpg',
@@ -62,6 +65,7 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   clubName: 'Mondino Club',
   clubSubtitle: 'Farmacia y Perfumería Mondino',
   logoUrl: '/images/hero_perfumery_banner.jpg',
+  appLogoUrl: DEFAULT_APP_LOGO_URL,
   primaryColor: '#064E3B',
   secondaryColor: '#0F766E',
   accentColor: '#D97706',
@@ -74,3 +78,50 @@ export const DEFAULT_APP_SETTINGS: AppSettings = {
   address: 'Av. San Martín 59, Villa Carlos Paz, Córdoba',
   openingHours: 'Lun a Sáb de 09:00 a 23:00hs, y Dom de 09:00 a 14:00hs y 17:00 a 23:00hs',
 };
+
+/**
+ * Codifica tanto el banner principal de la web (logoUrl) como el logotipo oficial de la app (appLogoUrl)
+ * dentro de la columna existente `logo_url` de Supabase sin necesidad de alterar el esquema SQL.
+ */
+export function encodeLogoAndBanner(logoUrl?: string | null, appLogoUrl?: string | null): string {
+  const cleanBanner = (logoUrl || DEFAULT_APP_SETTINGS.logoUrl).trim();
+  const cleanAppLogo = (appLogoUrl || DEFAULT_APP_LOGO_URL).trim();
+  return JSON.stringify({
+    bannerUrl: cleanBanner,
+    appLogoUrl: cleanAppLogo,
+  });
+}
+
+export function decodeLogoAndBanner(raw?: string | null): {
+  logoUrl: string;
+  appLogoUrl: string;
+} {
+  if (!raw || !raw.trim()) {
+    return {
+      logoUrl: DEFAULT_APP_SETTINGS.logoUrl,
+      appLogoUrl: DEFAULT_APP_LOGO_URL,
+    };
+  }
+  const trimmed = raw.trim();
+  if (trimmed.startsWith('{')) {
+    try {
+      const parsed = JSON.parse(trimmed);
+      return {
+        logoUrl:
+          typeof parsed.bannerUrl === 'string' && parsed.bannerUrl.trim()
+            ? parsed.bannerUrl.trim()
+            : DEFAULT_APP_SETTINGS.logoUrl,
+        appLogoUrl:
+          typeof parsed.appLogoUrl === 'string' && parsed.appLogoUrl.trim()
+            ? parsed.appLogoUrl.trim()
+            : DEFAULT_APP_LOGO_URL,
+      };
+    } catch {
+      // Fallback si no es JSON válido
+    }
+  }
+  return {
+    logoUrl: trimmed,
+    appLogoUrl: DEFAULT_APP_LOGO_URL,
+  };
+}

@@ -76,10 +76,21 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50 text-slate-900">
       {/* Sidebar for Desktop */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
-        <div className="h-16 px-6 flex items-center justify-between border-b border-slate-200">
-          <span className="text-lg font-bold tracking-tight text-emerald-950 font-display truncate">
-            {settings.clubName}
-          </span>
+        <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200">
+          <img
+            src={settings.appLogoUrl || '/images/mondino_app_logo.jpg'}
+            alt={settings.clubName}
+            referrerPolicy="no-referrer"
+            className="w-9 h-9 rounded-xl object-cover border border-emerald-200 shadow-2xs shrink-0"
+          />
+          <div className="min-w-0">
+            <span className="text-base font-bold tracking-tight text-emerald-950 font-display truncate block leading-tight">
+              {settings.clubName}
+            </span>
+            <span className="text-[10px] text-slate-500 truncate block">
+              {settings.clubSubtitle}
+            </span>
+          </div>
         </div>
 
         <div className="px-4 py-3 border-b border-slate-100 bg-slate-50/60">
