@@ -1,0 +1,6 @@
+{
+  "name": "Mondino Club — Farmacia y Perfumería Mondino",
+  "description": "Programa oficial de fidelización y beneficios exclusivos para clientes de Farmacia y Perfumería Mondino. Sumá 1 punto por cada $100 con tu código QR personal.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

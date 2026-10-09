@@ -1,0 +1,389 @@
+{
+  "settings": {
+    "id": "mondino-Global-settings",
+    "clubName": "Mondino Club",
+    "clubSubtitle": "Farmacia y Perfumería Mondino",
+    "logoUrl": "/images/hero_perfumery_banner.jpg",
+    "primaryColor": "#064E3B",
+    "secondaryColor": "#0F766E",
+    "accentColor": "#D97706",
+    "basePointsRateLocked": 100,
+    "birthdayBonusPoints": 200,
+    "referrerBonusPoints": 150,
+    "referredBonusPoints": 100,
+    "notificationsEnabled": true,
+    "whatsappContact": "+54 9 3492 42-0000",
+    "address": "Av. Santa Fe 1250, Rafaela, Santa Fe",
+    "openingHours": "Lun a Sáb de 08:00 a 21:00 hs"
+  },
+  "profiles": [
+    {
+      "id": "usr-admin-santino",
+      "uid": "usr-admin-santino",
+      "email": "santinomondi2010@gmail.com",
+      "firstName": "Santino",
+      "lastName": "Mondino",
+      "avatarUrl": "",
+      "phone": "+54 9 3492 42-0000",
+      "birthDate": "1995-05-15",
+      "role": "ADMINISTRADOR",
+      "status": "ACTIVO",
+      "qrToken": "MND-QR-ADMIN-001A",
+      "referralCode": "SANT-1001",
+      "referredById": null,
+      "notificationPreferences": {
+        "promotions": true,
+        "benefits": true,
+        "expiring": true,
+        "birthday": true,
+        "news": true
+      },
+      "pointsBalance": 1450,
+      "createdAt": "2026-10-09T01:31:16.908Z",
+      "updatedAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "usr-staff-mostrador",
+      "uid": "usr-staff-mostrador",
+      "email": "mostrador@farmaciamondino.com",
+      "firstName": "Lucía",
+      "lastName": "Peralta (Farmacéutica)",
+      "avatarUrl": "",
+      "phone": "+54 9 3492 51-2233",
+      "birthDate": "1992-08-20",
+      "role": "EMPLEADO",
+      "status": "ACTIVO",
+      "qrToken": "MND-QR-STAFF-002B",
+      "referralCode": "LUCI-2002",
+      "referredById": null,
+      "notificationPreferences": {
+        "promotions": true,
+        "benefits": true,
+        "expiring": true,
+        "birthday": true,
+        "news": true
+      },
+      "pointsBalance": 420,
+      "createdAt": "2026-10-09T01:31:16.908Z",
+      "updatedAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "usr-cli-valeria",
+      "uid": "usr-cli-valeria",
+      "email": "valeria.gomez@gmail.com",
+      "firstName": "Valeria",
+      "lastName": "Gómez",
+      "avatarUrl": "",
+      "phone": "+54 9 3492 60-1122",
+      "birthDate": "1990-10-12",
+      "role": "CLIENTE",
+      "status": "ACTIVO",
+      "qrToken": "MND-QR-CLI01-74829B",
+      "referralCode": "VALE-7482",
+      "referredById": null,
+      "notificationPreferences": {
+        "promotions": true,
+        "benefits": true,
+        "expiring": true,
+        "birthday": true,
+        "news": true
+      },
+      "pointsBalance": 1250,
+      "createdAt": "2026-10-09T01:31:16.908Z",
+      "updatedAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "usr-cli-martin",
+      "uid": "usr-cli-martin",
+      "email": "martin.castellanos@gmail.com",
+      "firstName": "Martín",
+      "lastName": "Castellanos",
+      "avatarUrl": "",
+      "phone": "+54 9 3492 64-8899",
+      "birthDate": "1986-03-22",
+      "role": "CLIENTE",
+      "status": "ACTIVO",
+      "qrToken": "MND-QR-CLI02-91834C",
+      "referralCode": "MART-9183",
+      "referredById": "usr-cli-valeria",
+      "notificationPreferences": {
+        "promotions": true,
+        "benefits": true,
+        "expiring": true,
+        "birthday": true,
+        "news": true
+      },
+      "pointsBalance": 580,
+      "createdAt": "2026-10-09T01:31:16.908Z",
+      "updatedAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "employees": [
+    {
+      "id": "emp-init-1",
+      "profileId": "usr-staff-mostrador",
+      "employeeCode": "EMP-001",
+      "position": "Farmacéutica — Atención en Mostrador",
+      "branch": "Casa Central Mondino",
+      "canRegisterPurchases": true,
+      "canManageRedemptions": true,
+      "isActive": true,
+      "authorizedBy": "usr-admin-santino",
+      "createdAt": "2026-10-09T01:31:16.908Z",
+      "updatedAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "promotions": [
+    {
+      "id": "promo-dermo-x2",
+      "title": "Semana Dermocosmética: Puntos x2",
+      "description": "Duplicá tus puntos base en todas las líneas de cuidado facial, serums y fotoprotección dermatológica.",
+      "imageUrl": "/images/news_dermocosmetics_event.jpg",
+      "category": "Dermocosmética",
+      "promoType": "MULTIPLICADOR",
+      "multiplier": 2,
+      "extraPoints": 0,
+      "minPurchaseAmount": 15000,
+      "startDate": "2025-01-01",
+      "endDate": "2027-12-31",
+      "usageLimit": 500,
+      "currentUsages": 14,
+      "isActive": true,
+      "termsConditions": "Válido en compras superiores a $15.000 presentando QR de Mondino Club.",
+      "createdBy": "usr-admin-santino",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "promo-perfumeria-plus150",
+      "title": "Especial Fragancias Selectivas (+150 pts)",
+      "description": "Sumá 150 puntos extra adicionales al 1% base comprando fragancias importadas seleccionadas.",
+      "imageUrl": "/images/hero_perfumery_banner.jpg",
+      "category": "Perfumería",
+      "promoType": "PUNTOS_EXTRA",
+      "multiplier": 1,
+      "extraPoints": 150,
+      "minPurchaseAmount": 40000,
+      "startDate": "2025-01-01",
+      "endDate": "2027-12-31",
+      "usageLimit": 300,
+      "currentUsages": 9,
+      "isActive": true,
+      "termsConditions": "Acumulable con la regla base permanente ($100 = 1 punto).",
+      "createdBy": "usr-admin-santino",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "benefits": [
+    {
+      "id": "ben-kit-skincare",
+      "title": "Kit Rutina Hidratación Termal + Neceser Mondino",
+      "description": "Incluye agua termal 150ml, emulsión hidratante hipoalergénica y neceser exclusivo de Farmacia Mondino.",
+      "imageUrl": "/images/benefit_skincare_kit.jpg",
+      "pointsRequired": 450,
+      "category": "Dermocosmética",
+      "startDate": "2025-01-01",
+      "endDate": "2027-12-31",
+      "isActive": true,
+      "usageLimit": 100,
+      "stockAvailable": 25,
+      "termsConditions": "Presentar código único de canje y DNI en mostrador.",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "ben-voucher-perfumeria",
+      "title": "Voucher $15.000 en Perfumería Selectiva",
+      "description": "Descuento directo sobre fragancias importadas y cofres de regalo en sucursal.",
+      "imageUrl": "/images/benefit_fragrance_voucher.jpg",
+      "pointsRequired": 600,
+      "category": "Perfumería",
+      "startDate": "2025-01-01",
+      "endDate": "2027-12-31",
+      "isActive": true,
+      "usageLimit": 100,
+      "stockAvailable": 40,
+      "termsConditions": "Válido para compras superiores a $50.000 en el sector Perfumería.",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "ben-cuidado-capilar",
+      "title": "Set Reparación Capilar Intensiva Profesional",
+      "description": "Shampoo + máscara nutritiva con óleo de argán y keratina dermatológicamente testeada.",
+      "imageUrl": "/images/benefit_skincare_kit.jpg",
+      "pointsRequired": 320,
+      "category": "Cuidado Personal",
+      "startDate": "2025-01-01",
+      "endDate": "2027-12-31",
+      "isActive": true,
+      "usageLimit": 100,
+      "stockAvailable": 30,
+      "termsConditions": "Sujeto a disponibilidad de stock en sucursal.",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "news": [
+    {
+      "id": "news-diagnostico-piel",
+      "title": "Jornada de Diagnóstico Dermo-Facial Sin Cargo para Socios",
+      "summary": "Reservá tu turno con nuestras especialistas en dermocosmética y descubrí tu rutina ideal.",
+      "description": "Durante todo el mes en Farmacia y Perfumería Mondino realizamos análisis dermo-facial digital para socios de Mondino Club. Además, todas tus compras en el sector suman puntos automáticamente presentando tu QR personal.",
+      "imageUrl": "/images/news_dermocosmetics_event.jpg",
+      "category": "Eventos",
+      "isPublished": true,
+      "publishedAt": "2026-10-09",
+      "createdBy": "Farmacia y Perfumería Mondino",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "news-fragancias-temporada",
+      "title": "Nuevas Fragancias Internacionales en Perfumería Mondino",
+      "summary": "Conocé los lanzamientos exclusivos de temporada y multiplicá tus puntos.",
+      "description": "Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($100 = 1 punto garantizado).",
+      "imageUrl": "/images/hero_perfumery_banner.jpg",
+      "category": "Lanzamientos",
+      "isPublished": true,
+      "publishedAt": "2026-10-09",
+      "createdBy": "Farmacia y Perfumería Mondino",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "purchases": [
+    {
+      "id": "pur-init-1001",
+      "idempotencyKey": "idem-init-1001",
+      "customerId": "usr-cli-valeria",
+      "employeeId": "usr-staff-mostrador",
+      "amount": 50000,
+      "category": "Dermocosmética",
+      "basePoints": 500,
+      "promoPoints": 500,
+      "totalPoints": 1000,
+      "promotionId": "promo-dermo-x2",
+      "notes": "Serum Ácido Hialurónico + Fotoprotector ISDIN Fusion Water",
+      "status": "COMPLETADA",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "pur-init-1002",
+      "idempotencyKey": "idem-init-1002",
+      "customerId": "usr-admin-santino",
+      "employeeId": "usr-staff-mostrador",
+      "amount": 100000,
+      "category": "Perfumería",
+      "basePoints": 1000,
+      "promoPoints": 150,
+      "totalPoints": 1150,
+      "promotionId": "promo-perfumeria-plus150",
+      "notes": "Eau de Parfum Importado 100ml",
+      "status": "COMPLETADA",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "tx-init-1",
+      "customerId": "usr-cli-valeria",
+      "purchaseId": "pur-init-1001",
+      "promotionId": null,
+      "amount": 500,
+      "balanceAfter": 750,
+      "type": "COMPRA_BASE",
+      "description": "Puntos base 1% ($100 = 1 pto) — Compra en Dermocosmética ($50.000)",
+      "idempotencyKey": "idem-init-1001-base",
+      "createdBy": "mostrador@farmaciamondino.com",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "tx-init-2",
+      "customerId": "usr-cli-valeria",
+      "purchaseId": "pur-init-1001",
+      "promotionId": "promo-dermo-x2",
+      "amount": 500,
+      "balanceAfter": 1250,
+      "type": "PROMOCION_COMPRA",
+      "description": "Bonificación promoción: Semana Dermocosmética: Puntos x2",
+      "idempotencyKey": "idem-init-1001-promo",
+      "createdBy": "mostrador@farmaciamondino.com",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "tx-init-3",
+      "customerId": "usr-admin-santino",
+      "purchaseId": "pur-init-1002",
+      "promotionId": null,
+      "amount": 1000,
+      "balanceAfter": 1300,
+      "type": "COMPRA_BASE",
+      "description": "Puntos base 1% ($100 = 1 pto) — Compra en Perfumería ($100.000)",
+      "idempotencyKey": "idem-init-1002-base",
+      "createdBy": "mostrador@farmaciamondino.com",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "tx-init-4",
+      "customerId": "usr-admin-santino",
+      "purchaseId": "pur-init-1002",
+      "promotionId": "promo-perfumeria-plus150",
+      "amount": 150,
+      "balanceAfter": 1450,
+      "type": "PROMOCION_COMPRA",
+      "description": "Bonificación promoción: Especial Fragancias Selectivas (+150 pts)",
+      "idempotencyKey": "idem-init-1002-promo",
+      "createdBy": "mostrador@farmaciamondino.com",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "redemptions": [
+    {
+      "id": "red-init-01",
+      "benefitId": "ben-cuidado-capilar",
+      "customerId": "usr-cli-valeria",
+      "pointsSpent": 320,
+      "redemptionCode": "MND-8F4A2C",
+      "status": "DISPONIBLE",
+      "expiresAt": "2026-12-31",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "referrals": [],
+  "notifications": [
+    {
+      "id": "notif-init-1",
+      "customerId": "usr-admin-santino",
+      "type": "BIENVENIDA",
+      "title": "¡Bienvenido a Mondino Club!",
+      "message": "Tu cuenta de Administrador está activa. Podés alternar entre Vista Cliente, Modo Empleado y Panel Admin desde la barra superior.",
+      "isRead": false,
+      "actionUrl": "/inicio",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    },
+    {
+      "id": "notif-init-2",
+      "customerId": "usr-cli-valeria",
+      "type": "COMPRA",
+      "title": "¡Sumaste +1.000 puntos en Dermocosmética!",
+      "message": "Acreditamos tu compra de $50.000 con Multiplicador x2.",
+      "isRead": false,
+      "actionUrl": "/historial",
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ],
+  "campaigns": [],
+  "auditLogs": [
+    {
+      "id": "aud-init-1",
+      "actorId": "usr-staff-mostrador",
+      "actorEmail": "mostrador@farmaciamondino.com",
+      "actorRole": "EMPLEADO",
+      "action": "REGISTRO_COMPRA_QR",
+      "entityType": "purchases",
+      "entityId": "pur-init-1001",
+      "reason": "Compra registrada en mostrador ($50.000 ARS -> +1.000 pts)",
+      "metadata": {
+        "customerId": "usr-cli-valeria",
+        "amount": 50000,
+        "totalPoints": 1000
+      },
+      "createdAt": "2026-10-09T01:31:16.908Z"
+    }
+  ]
+}
