@@ -59,7 +59,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
     { id: 'registrar-compra', label: 'Registrar Compra QR', icon: ScanLine },
     { id: 'beneficios', label: 'Beneficios y Fotos', icon: Gift },
     { id: 'novedades', label: 'Novedades y Fotos', icon: Newspaper },
-    { id: 'promociones', label: 'Promociones (1% + Bonus)', icon: Sparkles },
+    { id: 'promociones', label: 'Promociones ($1.000 = 1 pto + Bonus)', icon: Sparkles },
     { id: 'inicio', label: 'Resumen General', icon: LayoutDashboard, adminOnly: true },
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'compras', label: 'Historial de Compras', icon: ReceiptText },
@@ -74,7 +74,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
   const visibleItems = menuItems.filter((item) => !item.adminOnly || isAdmin);
 
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row bg-slate-50 text-slate-900">
+    <div className="min-h-screen w-full overflow-x-clip flex flex-col lg:flex-row bg-slate-50 text-slate-900">
       {/* Sidebar for Desktop */}
       <aside className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-slate-200 z-30">
         <div className="h-16 px-5 flex items-center gap-3 border-b border-slate-200">
@@ -99,7 +99,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
             {profile?.firstName} {profile?.lastName}
           </p>
           <p className="text-[11px] text-slate-500 truncate">
-            {isAdmin ? 'Panel Administrador' : 'Terminal Mostrador / Empleado'} · Regla 1%
+            {isAdmin ? 'Panel Administrador' : 'Terminal Mostrador / Empleado'} · $1.000 = 1 pto
           </p>
         </div>
 
@@ -148,23 +148,23 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
       {/* Main Content Wrapper */}
       <div className="flex-1 lg:pl-64 flex flex-col min-w-0">
         {/* Top Bar Contract */}
-        <header className="sticky top-0 z-20 h-16 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-20 min-h-16 py-2 bg-white/95 backdrop-blur-md border-b border-slate-200 px-3 sm:px-8 flex flex-wrap items-center justify-between gap-2 sm:gap-4 w-full">
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold text-slate-900 truncate">
               {visibleItems.find((i) => i.id === activeSection)?.label || 'Gestión Mondino Club'}
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <ZoomControls />
             <PWAInstallButton />
 
             {/* Workspace Mode Switcher for Admin/Staff */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg max-w-full overflow-x-auto">
               <button
                 type="button"
                 onClick={() => setWorkspaceMode('CLIENTE')}
-                className="px-2.5 py-1.5 text-xs font-medium rounded-md text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
+                className="px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-md text-slate-600 hover:text-slate-900 transition-colors whitespace-nowrap cursor-pointer"
               >
                 Vista Cliente
               </button>
@@ -174,7 +174,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                   setWorkspaceMode('EMPLEADO');
                   onSelectSection('registrar-compra');
                 }}
-                className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                className={`px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                   workspaceMode === 'EMPLEADO'
                     ? 'bg-white text-slate-900 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900'
@@ -186,7 +186,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({
                 <button
                   type="button"
                   onClick={() => setWorkspaceMode('ADMINISTRADOR')}
-                  className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
+                  className={`px-2 sm:px-2.5 py-1.5 text-[11px] sm:text-xs font-medium rounded-md transition-colors whitespace-nowrap cursor-pointer ${
                     workspaceMode === 'ADMINISTRADOR'
                       ? 'bg-emerald-900 text-white shadow-xs font-semibold'
                       : 'text-slate-600 hover:text-slate-900'

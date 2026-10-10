@@ -467,8 +467,8 @@ export const StaffRegisterPurchasePage: React.FC = () => {
             Terminal de Mostrador — Farmacia y Perfumería Mondino
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            Escaneá el QR del cliente, ingresá el monto real de la venta y acreditá el 1% más
-            promociones vigentes.
+            Escaneá el QR del cliente, ingresá el monto real de la venta y acreditá 1 punto cada
+            $1.000 más promociones vigentes.
           </p>
         </div>
 
@@ -748,7 +748,7 @@ export const StaffRegisterPurchasePage: React.FC = () => {
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   El empleado solo introduce el monto y categoría. El servidor calcula
-                  automáticamente el 1% ($100 = 1 punto) y las promociones aplicables.
+                  automáticamente los puntos base ($1.000 = 1 punto) y las promociones aplicables.
                 </p>
               </div>
 
@@ -851,9 +851,9 @@ export const StaffRegisterPurchasePage: React.FC = () => {
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <span className="font-semibold text-slate-800 flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-800" />
-                    Cálculo oficial validado por servidor (Regla 1%)
+                    Cálculo oficial validado por servidor ($1.000 = 1 punto)
                   </span>
-                  <span>{loadingPreview ? 'Calculando...' : '$100 = 1 punto'}</span>
+                  <span>{loadingPreview ? 'Calculando...' : '$1.000 = 1 punto'}</span>
                 </div>
 
                 {preview ? (
@@ -871,7 +871,7 @@ export const StaffRegisterPurchasePage: React.FC = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-600">PUNTOS BASE (1%):</span>
+                      <span className="text-slate-600">PUNTOS BASE ($1.000 = 1 pto):</span>
                       <span className="font-mono font-semibold text-slate-900 tabular-nums">
                         {formatPoints(preview.basePoints)}
                       </span>

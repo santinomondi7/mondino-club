@@ -313,8 +313,8 @@ export const AdminClientsPurchasesView: React.FC<AdminClientsPurchasesViewProps>
                 Registro Histórico de Compras
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Todas las ventas validadas en mostrador con cálculo automático del 1% ($100 = 1
-                punto).
+                Todas las ventas validadas en mostrador con cálculo automático de 1 punto cada $1.000
+                ($1.000 = 1 punto).
               </p>
             </div>
 
@@ -362,7 +362,7 @@ export const AdminClientsPurchasesView: React.FC<AdminClientsPurchasesViewProps>
                     <th className="py-3 px-4">Categoría / Detalle</th>
                     <th className="py-3 px-4">Registrado por</th>
                     <th className="py-3 px-4 text-right">Venta ($ ARS)</th>
-                    <th className="py-3 px-4 text-right">Base 1%</th>
+                    <th className="py-3 px-4 text-right">Base ($1.000 = 1 pto)</th>
                     <th className="py-3 px-4 text-right">Promo</th>
                     <th className="py-3 px-4 text-right">Total Puntos</th>
                     <th className="py-3 px-4 text-right">Estado / Acción</th>
@@ -446,7 +446,7 @@ export const AdminClientsPurchasesView: React.FC<AdminClientsPurchasesViewProps>
                 Ledger de Transacciones de Puntos y Ajustes
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Regla Base Inmutable: $100 = 1 punto (1%). Todos los saldos están respaldados por
+                Regla Base Inmutable: $1.000 = 1 punto. Todos los saldos están respaldados por
                 movimientos auditables.
               </p>
             </div>

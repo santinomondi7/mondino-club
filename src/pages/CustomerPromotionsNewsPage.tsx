@@ -224,8 +224,8 @@ export const CustomerPromotionsNewsPage: React.FC = () => {
 
           {activePromotions.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
-              No hay promociones especiales activas en este momento. Seguís sumando el 1% base ($100
-              = 1 punto) en todas tus compras.
+              No hay promociones especiales activas en este momento. Seguís sumando 1 punto base por
+              cada $1.000 ($1.000 = 1 punto) en todas tus compras.
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

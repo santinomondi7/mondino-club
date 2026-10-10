@@ -502,24 +502,26 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
       )}
 
       {/* Top Header (3-Zone Contract) */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-16 flex items-center justify-between gap-2 sm:gap-6">
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200/90 sticky top-0 z-30 w-full">
+        <div className="max-w-6xl mx-auto px-2.5 sm:px-6 min-h-16 py-2 flex items-center justify-between gap-1.5 sm:gap-6">
           {/* Zone 1: Brand Identity */}
           <button
             onClick={() => onSelectTab('inicio')}
-            className="flex items-center gap-3 text-left cursor-pointer whitespace-nowrap shrink-0"
+            className="flex items-center gap-2 sm:gap-3 text-left cursor-pointer min-w-0"
           >
             <img
               src="/images/mondino_app_logo.jpg"
               alt={settings.clubName}
               referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
             />
-            <div>
-              <span className="font-bold text-slate-900 text-base tracking-tight block leading-tight font-display">
+            <div className="min-w-0">
+              <span className="font-bold text-slate-900 text-sm sm:text-base tracking-tight truncate block leading-tight font-display">
                 {settings.clubName}
               </span>
-              <span className="text-[11px] text-slate-500 block">{settings.clubSubtitle}</span>
+              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block">
+                {settings.clubSubtitle}
+              </span>
             </div>
           </button>
 
@@ -546,20 +548,20 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
           </nav>
 
           {/* Zone 3: Points Readout, Notifications & Logout */}
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-3 shrink-0">
             <ZoomControls />
             <PWAInstallButton />
 
             <button
               onClick={() => onSelectTab('mi-qr')}
-              className="flex items-center gap-1.5 text-sm font-mono font-bold text-emerald-950 hover:text-emerald-800 transition cursor-pointer whitespace-nowrap"
+              className="flex items-center gap-1 text-xs sm:text-sm font-mono font-bold text-emerald-950 hover:text-emerald-800 transition cursor-pointer whitespace-nowrap px-1"
               title="Tu saldo de puntos Mondino"
             >
               <span>{formatPoints(profile.pointsBalance)}</span>
-              <span className="text-xs font-sans font-semibold text-emerald-700">pts</span>
+              <span className="text-[11px] sm:text-xs font-sans font-semibold text-emerald-700">pts</span>
             </button>
 
-            <span className="text-slate-200 select-none" aria-hidden="true">
+            <span className="hidden sm:inline text-slate-200 select-none" aria-hidden="true">
               |
             </span>
 
@@ -567,7 +569,7 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
             <div className="relative">
               <button
                 onClick={handleOpenNotifications}
-                className="relative p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                className="relative p-1.5 sm:p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
                 aria-label="Notificaciones"
               >
                 <Bell className="w-5 h-5" />

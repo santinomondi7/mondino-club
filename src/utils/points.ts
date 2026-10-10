@@ -1,7 +1,7 @@
 import { BASE_PESOS_PER_POINT } from '../constants/index.ts';
 
 /**
- * Calcula la previsualización local del 1% base ($100 = 1 punto).
+ * Calcula la previsualización local de puntos base ($1.000 = 1 punto).
  * NOTA DE SEGURIDAD: Este cálculo es únicamente informativo para la interfaz.
  * El cálculo definitivo se realiza y valida exclusivamente en el backend (PostgreSQL).
  */

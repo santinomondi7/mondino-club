@@ -719,13 +719,81 @@ export const mondinoApi = {
       });
     } catch (err) {
       if (!isApiRouteUnavailableError(err) || !supabase) throw err;
-      const { data, error } = await supabase.rpc('preview_purchase_points', {
-        p_amount: Number(input.amount),
-        p_category: input.category,
-        p_promotion_id: input.promotionId || null,
-      });
-      if (error || !data) throw new Error(error?.message || 'Error al previsualizar puntos.');
-      return data as BackendPointsPreview;
+      const numAmount = Number(input.amount);
+      if (!Number.isFinite(numAmount) || numAmount <= 0) {
+        throw new Error('El importe de la compra debe ser mayor a $0.');
+      }
+      const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
+      let promoPoints = 0;
+      let bestPromo: PromotionItem | null = null;
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: promoRows } = await supabase
+        .from('promotions')
+        .select('*')
+        .eq('is_active', true);
+      const promotions = (promoRows || []).map(mapPromotionRow);
+      const categoryClean = (input.category || 'Todos').trim().toLowerCase();
+
+      if (input.promotionId && input.promotionId.trim() !== '') {
+        const candidate = promotions.find(
+          (p) =>
+            p.id === input.promotionId?.trim() &&
+            p.isActive &&
+            p.startDate <= today &&
+            p.endDate >= today &&
+            numAmount >= Number(p.minPurchaseAmount || 0) &&
+            (p.category === 'Todos' || p.category.toLowerCase() === categoryClean) &&
+            (!p.usageLimit || p.currentUsages < p.usageLimit)
+        );
+        if (candidate) {
+          bestPromo = candidate;
+          if (candidate.promoType === 'MULTIPLICADOR') {
+            promoPoints = Math.max(0, Math.round(basePoints * (Number(candidate.multiplier) - 1)));
+          } else if (candidate.promoType === 'PUNTOS_EXTRA') {
+            promoPoints = Math.max(0, Number(candidate.extraPoints || 0));
+          }
+        }
+      } else {
+        for (const candidate of promotions) {
+          if (
+            !candidate.isActive ||
+            candidate.startDate > today ||
+            candidate.endDate < today ||
+            numAmount < Number(candidate.minPurchaseAmount || 0) ||
+            (candidate.category !== 'Todos' && candidate.category.toLowerCase() !== categoryClean) ||
+            (candidate.usageLimit > 0 && candidate.currentUsages >= candidate.usageLimit)
+          ) {
+            continue;
+          }
+          let bonus = 0;
+          if (candidate.promoType === 'MULTIPLICADOR') {
+            bonus = Math.max(0, Math.round(basePoints * (Number(candidate.multiplier) - 1)));
+          } else if (candidate.promoType === 'PUNTOS_EXTRA') {
+            bonus = Math.max(0, Number(candidate.extraPoints || 0));
+          }
+          if (bonus > promoPoints) {
+            promoPoints = bonus;
+            bestPromo = candidate;
+          }
+        }
+      }
+
+      return {
+        amount: numAmount,
+        basePoints,
+        promoPoints,
+        totalPoints: basePoints + promoPoints,
+        appliedPromotion:
+          bestPromo && promoPoints > 0
+            ? {
+                id: bestPromo.id,
+                title: bestPromo.title,
+                promoType: bestPromo.promoType,
+                multiplier: bestPromo.multiplier,
+                extraPoints: bestPromo.extraPoints,
+              }
+            : null,
+      };
     }
   },
 
@@ -1008,7 +1076,6 @@ export const mondinoApi = {
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         accent_color: settings.accentColor,
-        base_points_rate_locked: BASE_PESOS_PER_POINT,
         birthday_bonus_points: settings.birthdayBonusPoints,
         referrer_bonus_points: settings.referrerBonusPoints,
         referred_bonus_points: settings.referredBonusPoints,

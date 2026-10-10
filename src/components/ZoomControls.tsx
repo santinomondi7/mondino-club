@@ -3,7 +3,7 @@ import { ZoomIn, ZoomOut } from 'lucide-react';
 
 const STORAGE_KEY = 'mondino_zoom_level_pct';
 const BASE_FONT_PX = 17; // Un poquito más grande por defecto (17px en lugar de 16px)
-const MIN_ZOOM = 80;
+const MIN_ZOOM = 60;
 const MAX_ZOOM = 150;
 const STEP_ZOOM = 10;
 
@@ -35,6 +35,18 @@ export const ZoomControls: React.FC = () => {
     applyRootZoom(zoomPct);
   }, [zoomPct]);
 
+  const updateZoom = (nextPct: number) => {
+    const clamped = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextPct));
+    setZoomPct(clamped);
+    applyRootZoom(clamped);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, String(clamped));
+      window.dispatchEvent(new CustomEvent('mondino-zoom-change', { detail: clamped }));
+    } catch {
+      // ignore storage errors
+    }
+  };
+
   useEffect(() => {
     const handleStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY) {
@@ -49,25 +61,59 @@ export const ZoomControls: React.FC = () => {
         setZoomPct(customEvent.detail);
       }
     };
+
+    // En celulares, si el usuario pellizca para achicar la pantalla (cuando visualViewport está en 1.0),
+    // reducimos proporcionalmente el zoom de diseño para que todo se achique ocupando siempre el 100% del ancho sin dejar franja blanca a la derecha.
+    let startDist = 0;
+    let startZoom = getSavedZoom();
+
+    const getTouchDist = (touches: TouchList) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.hypot(dx, dy);
+    };
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 2) {
+        startDist = getTouchDist(e.touches);
+        startZoom = getSavedZoom();
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 2 && startDist > 0) {
+        const vpScale = window.visualViewport?.scale ?? 1;
+        if (vpScale <= 1.02) {
+          const currentDist = getTouchDist(e.touches);
+          const ratio = currentDist / startDist;
+          if (ratio < 0.92 || (startZoom < 100 && ratio > 1.08)) {
+            const target = Math.round((startZoom * ratio) / 5) * 5;
+            const clamped = Math.max(MIN_ZOOM, Math.min(100, target));
+            if (clamped !== getSavedZoom()) {
+              updateZoom(clamped);
+            }
+          }
+        }
+      }
+    };
+
+    const handleTouchEnd = () => {
+      startDist = 0;
+    };
+
     window.addEventListener('storage', handleStorage);
     window.addEventListener('mondino-zoom-change', handleCustomZoom);
+    window.addEventListener('touchstart', handleTouchStart, { passive: true });
+    window.addEventListener('touchmove', handleTouchMove, { passive: true });
+    window.addEventListener('touchend', handleTouchEnd, { passive: true });
     return () => {
       window.removeEventListener('storage', handleStorage);
       window.removeEventListener('mondino-zoom-change', handleCustomZoom);
+      window.removeEventListener('touchstart', handleTouchStart);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleTouchEnd);
     };
   }, []);
-
-  const updateZoom = (nextPct: number) => {
-    const clamped = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, nextPct));
-    setZoomPct(clamped);
-    applyRootZoom(clamped);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, String(clamped));
-      window.dispatchEvent(new CustomEvent('mondino-zoom-change', { detail: clamped }));
-    } catch {
-      // ignore storage errors
-    }
-  };
 
   const handleZoomOut = () => updateZoom(zoomPct - STEP_ZOOM);
   const handleZoomIn = () => updateZoom(zoomPct + STEP_ZOOM);

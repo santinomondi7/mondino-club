@@ -338,7 +338,7 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
                 Promociones Especiales de Puntos
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                La regla base del 1% ($100 = 1 punto) es permanente. Aquí podés configurar
+                La regla base de $1.000 = 1 punto es permanente. Aquí podés configurar
                 multiplicadores (x2, x3), puntos extra y subir la foto de cada promoción.
               </p>
             </div>
@@ -644,19 +644,19 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
                     Previsualización de regla aplicada (sobre una compra ejemplo de $100.000):
                   </p>
                   <p className="font-mono">
-                    • Puntos base (1% inmutable): 1.000 puntos
+                    • Puntos base ($1.000 = 1 punto): 100 puntos
                     <br />• Bonificación promoción:{' '}
                     {editingPromo.promoType === 'MULTIPLICADOR'
                       ? `+${formatPoints(
-                          Math.round(1000 * (Number(editingPromo.multiplier || 2) - 1))
+                          Math.round(100 * (Number(editingPromo.multiplier || 2) - 1))
                         )} puntos (Multiplicador x${editingPromo.multiplier || 2})`
                       : `+${formatPoints(Number(editingPromo.extraPoints || 0))} puntos extra`}
                     <br />• <strong>Total a acreditar al cliente:</strong>{' '}
                     {editingPromo.promoType === 'MULTIPLICADOR'
                       ? `${formatPoints(
-                          1000 + Math.round(1000 * (Number(editingPromo.multiplier || 2) - 1))
+                          100 + Math.round(100 * (Number(editingPromo.multiplier || 2) - 1))
                         )} puntos`
-                      : `${formatPoints(1000 + Number(editingPromo.extraPoints || 0))} puntos`}
+                      : `${formatPoints(100 + Number(editingPromo.extraPoints || 0))} puntos`}
                   </p>
                 </div>
 

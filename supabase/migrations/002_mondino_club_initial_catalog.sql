@@ -27,7 +27,7 @@ INSERT INTO public.app_settings (
   '#064E3B',
   '#0F766E',
   '#D97706',
-  100,
+  1000,
   200,
   150,
   100,
@@ -76,7 +76,7 @@ INSERT INTO public.promotions (
 (
   'promo-perfumeria-plus150',
   'Especial Fragancias Selectivas (+150 pts)',
-  'Sumá 150 puntos extra adicionales al 1% base comprando fragancias importadas seleccionadas.',
+  'Sumá 150 puntos extra adicionales a tus puntos base ($1.000 = 1 punto) comprando fragancias importadas seleccionadas.',
   '/images/hero_perfumery_banner.jpg',
   'Perfumería',
   'PUNTOS_EXTRA',
@@ -88,7 +88,7 @@ INSERT INTO public.promotions (
   300,
   0,
   true,
-  'Acumulable con la regla base permanente ($100 = 1 punto).'
+  'Acumulable con la regla base permanente ($1.000 = 1 punto).'
 )
 ON CONFLICT (id) DO NOTHING;
 
@@ -178,7 +178,7 @@ INSERT INTO public.news (
   'news-fragancias-temporada',
   'Nuevas Fragancias Internacionales en Perfumería Mondino',
   'Conocé los lanzamientos exclusivos de temporada y multiplicá tus puntos.',
-  'Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($100 = 1 punto garantizado).',
+  'Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($1.000 = 1 punto garantizado).',
   '/images/hero_perfumery_banner.jpg',
   'Lanzamientos',
   true,

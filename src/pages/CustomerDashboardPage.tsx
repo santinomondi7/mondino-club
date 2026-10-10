@@ -230,7 +230,7 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
             </div>
 
             <div className="pt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-emerald-100/90">
-              <span>1 punto por cada $100</span>
+              <span>1 punto por cada $1.000</span>
               {activePromotions.length > 0 && (
                 <>
                   <span>·</span>
@@ -482,7 +482,7 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
 
           {activePromotions.length === 0 ? (
             <p className="text-sm text-slate-500 py-8 text-center">
-              Actualmente sumás el 1% base ($100 = 1 punto) en todas tus compras.
+              Actualmente sumás 1 punto base por cada $1.000 ($1.000 = 1 punto) en todas tus compras.
             </p>
           ) : (
             <div className="divide-y divide-slate-100">
@@ -522,7 +522,7 @@ export const CustomerDashboardPage: React.FC<CustomerDashboardPageProps> = ({ on
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-emerald-800" />
-              Regla base garantizada: $100 = 1 punto (1%)
+              Regla base garantizada: $1.000 = 1 punto
             </span>
             <button
               type="button"

@@ -64,7 +64,7 @@ export const CustomerHistoryPage: React.FC = () => {
                     <th className="py-3 px-4">Fecha</th>
                     <th className="py-3 px-4">Detalle / Categoría</th>
                     <th className="py-3 px-4 text-right">Monto</th>
-                    <th className="py-3 px-4 text-right">Puntos Base (1%)</th>
+                    <th className="py-3 px-4 text-right">Puntos Base ($1.000 = 1 pto)</th>
                     <th className="py-3 px-4 text-right">Puntos Promo</th>
                     <th className="py-3 px-4 text-right">Total Acreditado</th>
                     <th className="py-3 px-4 text-right">Estado</th>

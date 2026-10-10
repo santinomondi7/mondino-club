@@ -685,17 +685,85 @@ export async function previewPointsForStaffInSupabase(
   auth: VerifiedAuthContext,
   input: { amount: number; category: string; promotionId?: string }
 ): Promise<BackendPointsPreview> {
-  const { data, error } = await auth.userClient.rpc('preview_purchase_points', {
-    p_amount: Number(input.amount),
-    p_category: input.category,
-    p_promotion_id: input.promotionId || null,
-  });
-
-  if (error || !data) {
-    throw new Error(error?.message || 'No se pudo previsualizar el cálculo de puntos.');
+  const numAmount = Number(input.amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > 50000000) {
+    throw new Error('El importe de la compra debe ser mayor a $0.');
   }
 
-  return data as BackendPointsPreview;
+  // REGLA BASE INMUTABLE: $1.000 = 1 punto
+  const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
+  let promoPoints = 0;
+  let bestPromo: PromotionItem | null = null;
+  const today = new Date().toISOString().slice(0, 10);
+
+  const { data: promoRows } = await auth.userClient
+    .from('promotions')
+    .select('*')
+    .eq('is_active', true);
+
+  const promotions = (promoRows || []).map(mapPromotionRow);
+  const categoryClean = (input.category || 'Todos').trim().toLowerCase();
+
+  if (input.promotionId && input.promotionId.trim() !== '') {
+    const candidate = promotions.find(
+      (p) =>
+        p.id === input.promotionId?.trim() &&
+        p.isActive &&
+        p.startDate <= today &&
+        p.endDate >= today &&
+        numAmount >= Number(p.minPurchaseAmount || 0) &&
+        (p.category === 'Todos' || p.category.toLowerCase() === categoryClean) &&
+        (!p.usageLimit || p.currentUsages < p.usageLimit)
+    );
+    if (candidate) {
+      bestPromo = candidate;
+      if (candidate.promoType === 'MULTIPLICADOR') {
+        promoPoints = Math.max(0, Math.round(basePoints * (Number(candidate.multiplier) - 1)));
+      } else if (candidate.promoType === 'PUNTOS_EXTRA') {
+        promoPoints = Math.max(0, Number(candidate.extraPoints || 0));
+      }
+    }
+  } else {
+    for (const candidate of promotions) {
+      if (
+        !candidate.isActive ||
+        candidate.startDate > today ||
+        candidate.endDate < today ||
+        numAmount < Number(candidate.minPurchaseAmount || 0) ||
+        (candidate.category !== 'Todos' && candidate.category.toLowerCase() !== categoryClean) ||
+        (candidate.usageLimit > 0 && candidate.currentUsages >= candidate.usageLimit)
+      ) {
+        continue;
+      }
+      let bonus = 0;
+      if (candidate.promoType === 'MULTIPLICADOR') {
+        bonus = Math.max(0, Math.round(basePoints * (Number(candidate.multiplier) - 1)));
+      } else if (candidate.promoType === 'PUNTOS_EXTRA') {
+        bonus = Math.max(0, Number(candidate.extraPoints || 0));
+      }
+      if (bonus > promoPoints) {
+        promoPoints = bonus;
+        bestPromo = candidate;
+      }
+    }
+  }
+
+  return {
+    amount: numAmount,
+    basePoints,
+    promoPoints,
+    totalPoints: basePoints + promoPoints,
+    appliedPromotion:
+      bestPromo && promoPoints > 0
+        ? {
+            id: bestPromo.id,
+            title: bestPromo.title,
+            promoType: bestPromo.promoType,
+            multiplier: bestPromo.multiplier,
+            extraPoints: bestPromo.extraPoints,
+          }
+        : null,
+  };
 }
 
 export async function registerPurchaseForStaffInSupabase(
@@ -716,26 +784,178 @@ export async function registerPurchaseForStaffInSupabase(
   totalPoints: number;
   newBalance: number;
 }> {
-  const { data, error } = await auth.userClient.rpc('register_purchase_atomic', {
-    p_idempotency_key: input.idempotencyKey,
-    p_customer_id: input.customerId,
-    p_amount: Number(input.amount),
-    p_category: input.category,
-    p_promotion_id: input.promotionId || null,
-    p_notes: input.notes || '',
-  });
-
-  if (error || !data) {
-    throw new Error(error?.message || 'Error al registrar la compra.');
+  const operator = await verifyActiveStaffOrAdminProfile(auth);
+  const key = (input.idempotencyKey || '').trim();
+  if (!key) {
+    throw new Error('Se requiere clave de idempotencia (idempotencyKey) para registrar la compra.');
   }
 
-  return data as {
-    purchaseId: string;
-    customerName: string;
-    basePoints: number;
-    promoPoints: number;
-    totalPoints: number;
-    newBalance: number;
+  const numAmount = Number(input.amount);
+  if (!Number.isFinite(numAmount) || numAmount <= 0 || numAmount > 50000000) {
+    throw new Error('El importe de la compra debe ser un valor positivo válido.');
+  }
+
+  // Verificar idempotencia
+  const { data: existingPur } = await auth.adminClient
+    .from('purchases')
+    .select('*')
+    .eq('idempotency_key', key)
+    .maybeSingle();
+
+  if (existingPur) {
+    const { data: custRow } = await auth.adminClient
+      .from('profiles')
+      .select('*')
+      .eq('id', existingPur.customer_id)
+      .maybeSingle();
+    return {
+      purchaseId: String(existingPur.id),
+      customerName: custRow
+        ? `${custRow.first_name || ''} ${custRow.last_name || ''}`.trim()
+        : String(existingPur.customer_id),
+      basePoints: Number(existingPur.base_points ?? 0),
+      promoPoints: Number(existingPur.promo_points ?? 0),
+      totalPoints: Number(existingPur.total_points ?? 0),
+      newBalance: Number(custRow?.points_balance ?? 0),
+    };
+  }
+
+  const { data: custRow, error: custErr } = await auth.adminClient
+    .from('profiles')
+    .select('*')
+    .eq('id', input.customerId)
+    .single();
+
+  if (custErr || !custRow) {
+    throw new Error('Cliente no encontrado.');
+  }
+
+  const customer = mapProfileRow(custRow);
+  if (customer.status !== AccountStatus.ACTIVO) {
+    throw new Error('La cuenta del cliente se encuentra suspendida.');
+  }
+
+  const calc = await previewPointsForStaffInSupabase(auth, {
+    amount: numAmount,
+    category: input.category,
+    promotionId: input.promotionId,
+  });
+
+  const purchaseId = `pur-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+  const balanceAfterBase = customer.pointsBalance + calc.basePoints;
+  const newBalance = customer.pointsBalance + calc.totalPoints;
+  const categoryName = (input.category || 'Perfumería').trim() || 'Perfumería';
+
+  const { error: insertPurErr } = await auth.adminClient.from('purchases').insert({
+    id: purchaseId,
+    idempotency_key: key,
+    customer_id: customer.id,
+    employee_id: operator.id,
+    amount: calc.amount,
+    category: categoryName,
+    base_points: calc.basePoints,
+    promo_points: calc.promoPoints,
+    total_points: calc.totalPoints,
+    promotion_id: calc.appliedPromotion?.id || null,
+    notes: (input.notes || '').trim(),
+    status: 'COMPLETADA',
+  });
+
+  if (insertPurErr) {
+    throw new Error(insertPurErr.message || 'Error al registrar la compra.');
+  }
+
+  if (calc.basePoints > 0) {
+    await auth.adminClient.from('points_transactions').insert({
+      id: `tx-base-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      customer_id: customer.id,
+      purchase_id: purchaseId,
+      promotion_id: null,
+      amount: calc.basePoints,
+      balance_after: balanceAfterBase,
+      type: 'COMPRA_BASE',
+      description: `Puntos base ($1.000 = 1 pto) — Compra en ${categoryName}`,
+      idempotency_key: `${key}-base`,
+      created_by: operator.email,
+    });
+  }
+
+  if (calc.promoPoints > 0) {
+    await auth.adminClient.from('points_transactions').insert({
+      id: `tx-promo-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      customer_id: customer.id,
+      purchase_id: purchaseId,
+      promotion_id: calc.appliedPromotion?.id || null,
+      amount: calc.promoPoints,
+      balance_after: newBalance,
+      type: 'PROMOCION_COMPRA',
+      description: `Bonificación promoción: ${calc.appliedPromotion?.title || 'Promoción Mondino'}`,
+      idempotency_key: `${key}-promo`,
+      created_by: operator.email,
+    });
+
+    if (calc.appliedPromotion?.id) {
+      const { data: promoRow } = await auth.adminClient
+        .from('promotions')
+        .select('current_usages')
+        .eq('id', calc.appliedPromotion.id)
+        .maybeSingle();
+      if (promoRow) {
+        await auth.adminClient
+          .from('promotions')
+          .update({ current_usages: Number(promoRow.current_usages ?? 0) + 1 })
+          .eq('id', calc.appliedPromotion.id);
+      }
+    }
+  }
+
+  const { error: updBalErr } = await auth.adminClient
+    .from('profiles')
+    .update({
+      points_balance: newBalance,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', customer.id);
+
+  if (updBalErr) {
+    throw new Error(updBalErr.message || 'No se pudo actualizar el saldo de puntos del cliente.');
+  }
+
+  await auth.adminClient.from('notifications').insert({
+    id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    customer_id: customer.id,
+    type: 'COMPRA',
+    title: `¡Sumaste +${calc.totalPoints} puntos en Mondino Club!`,
+    message: `Acreditamos tu compra de $${calc.amount.toLocaleString('es-AR')} en ${categoryName}. Nuevo saldo: ${newBalance} puntos.`,
+    is_read: false,
+    action_url: '/historial',
+  });
+
+  await auth.adminClient.from('audit_logs').insert({
+    id: `aud-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    actor_id: operator.id,
+    actor_email: operator.email,
+    actor_role: operator.role,
+    action: 'REGISTRO_COMPRA_QR',
+    entity_type: 'purchases',
+    entity_id: purchaseId,
+    reason: `Compra registrada en mostrador ($${calc.amount} ARS -> +${calc.totalPoints} pts)`,
+    metadata: {
+      customerId: customer.id,
+      amount: calc.amount,
+      basePoints: calc.basePoints,
+      promoPoints: calc.promoPoints,
+      totalPoints: calc.totalPoints,
+    },
+  });
+
+  return {
+    purchaseId,
+    customerName: `${customer.firstName} ${customer.lastName}`.trim(),
+    basePoints: calc.basePoints,
+    promoPoints: calc.promoPoints,
+    totalPoints: calc.totalPoints,
+    newBalance,
   };
 }
 
@@ -995,7 +1215,7 @@ export async function updateSettingsAdminInSupabase(
   const current = currentCatalog.settings;
 
   // Empleados y Administrador pueden actualizar la imagen principal de la web (logoUrl) y el logotipo de la app (appLogoUrl);
-  // Administrador puede actualizar todos los parámetros globales (excepto la regla base inmutable $100 = 1 pto)
+  // Administrador puede actualizar todos los parámetros globales (excepto la regla base inmutable $1.000 = 1 pto)
   const isFullAdmin = actor.role === UserRole.ADMINISTRADOR;
   const nextBannerUrl = settings.logoUrl || current.logoUrl || DEFAULT_APP_SETTINGS.logoUrl;
   const nextAppLogoUrl = DEFAULT_APP_LOGO_URL;
@@ -1014,7 +1234,6 @@ export async function updateSettingsAdminInSupabase(
       ? settings.secondaryColor || current.secondaryColor
       : current.secondaryColor,
     accent_color: isFullAdmin ? settings.accentColor || current.accentColor : current.accentColor,
-    base_points_rate_locked: BASE_PESOS_PER_POINT, // SIEMPRE 100 ($100 = 1 punto)
     birthday_bonus_points: BIRTHDAY_BONUS_POINTS, // 20 puntos por cumpleaños
     referrer_bonus_points: REFERRER_BONUS_POINTS, // 15 puntos por invitar a un amigo
     referred_bonus_points: REFERRED_BONUS_POINTS, // 10 puntos por ser invitado

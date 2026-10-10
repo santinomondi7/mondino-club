@@ -158,7 +158,7 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
                 Panel Administrativo — {settings.clubName}
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                {settings.clubSubtitle} · Regla base inmutable: $100 = 1 punto (1%)
+                {settings.clubSubtitle} · Regla base inmutable: $1.000 = 1 punto
               </p>
             </div>
 
@@ -573,18 +573,18 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
             </p>
           </div>
 
-          {/* Permanent 1% & Official Bonus Rules Locked Notice */}
+          {/* Permanent Base & Official Bonus Rules Locked Notice */}
           <div className="rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 flex items-start gap-3">
             <Lock className="w-5 h-5 text-emerald-900 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs text-emerald-950">
               <p className="font-bold">
-                Reglas Oficiales de Puntos de Mondino Club: $100 = 1 punto · Cumpleaños +20 pts ·
+                Reglas Oficiales de Puntos de Mondino Club: $1.000 = 1 punto · Cumpleaños +20 pts ·
                 Invitar amigo +15 pts · Ser invitado +10 pts
               </p>
               <p>
-                De acuerdo con la política de Farmacia y Perfumería Mondino, el porcentaje base del
-                1% ($100 = 1 punto) y las bonificaciones fijas (20 puntos por cumpleaños, 15 puntos
-                por invitar a un amigo y 10 puntos por ser invitado) están establecidos de forma
+                De acuerdo con la política de Farmacia y Perfumería Mondino, la regla base de $1.000
+                = 1 punto y las bonificaciones fijas (20 puntos por cumpleaños, 15 puntos por
+                invitar a un amigo y 10 puntos por ser invitado) están establecidas de forma
                 permanente.
               </p>
             </div>

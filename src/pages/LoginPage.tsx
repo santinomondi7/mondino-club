@@ -73,23 +73,23 @@ export const LoginPage: React.FC = () => {
   const activeQuote = PHARMACY_QUOTES[quoteIdx] || PHARMACY_QUOTES[0];
 
   return (
-    <div className="min-h-screen bg-[#F8FAF9] flex flex-col justify-between">
+    <div className="min-h-screen w-full overflow-x-clip bg-[#F8FAF9] flex flex-col justify-between">
       {/* Top Navbar (Strict 3-Zone Contract) */}
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30 w-full">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 min-h-16 py-2 flex items-center justify-between gap-2 sm:gap-6">
           {/* Zone 1: Brand Logo & Wordmark */}
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
             <img
               src="/images/mondino_app_logo.jpg"
               alt={settings.clubName}
               referrerPolicy="no-referrer"
-              className="w-10 h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-contain bg-white border border-emerald-200 shadow-2xs shrink-0"
             />
-            <div>
-              <span className="font-bold text-emerald-950 tracking-tight text-lg font-display whitespace-nowrap block leading-tight">
+            <div className="min-w-0">
+              <span className="font-bold text-emerald-950 tracking-tight text-base sm:text-lg font-display truncate block leading-tight">
                 {settings.clubName}
               </span>
-              <span className="text-[11px] text-slate-500 block leading-tight">
+              <span className="text-[10px] sm:text-[11px] text-slate-500 truncate block leading-tight">
                 {settings.clubSubtitle}
               </span>
             </div>
@@ -112,7 +112,7 @@ export const LoginPage: React.FC = () => {
           </div>
 
           {/* Zone 3: Primary Action */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <ZoomControls />
             <PWAInstallButton />
           </div>
@@ -201,28 +201,28 @@ export const LoginPage: React.FC = () => {
                 <div className="text-xs font-semibold text-emerald-900 mb-1">
                   <span>Regla transparente y permanente</span>
                   <span className="mx-1.5">·</span>
-                  <span>1% en puntos base</span>
+                  <span>$1.000 = 1 punto base</span>
                 </div>
                 <p className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 font-display">
-                  Cada <span className="text-emerald-800">$100</span> de compra ={' '}
+                  Cada <span className="text-emerald-800">$1.000</span> de compra ={' '}
                   <span className="text-emerald-800">1 Punto</span> Mondino
                 </p>
                 <p className="text-xs text-slate-500 mt-1">
-                  Equivalente exacto al 1% en puntos base más multiplicadores por promociones activas.
+                  Acumulás 1 punto base por cada $1.000 de compra más multiplicadores por promociones activas.
                 </p>
               </div>
               <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs space-y-1 shrink-0 font-mono tabular-nums">
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Compra $1.000</span>
-                  <span className="font-bold text-slate-900">= 10 pts</span>
+                  <span className="font-bold text-slate-900">= 1 pto</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Compra $10.000</span>
-                  <span className="font-bold text-slate-900">= 100 pts</span>
+                  <span className="font-bold text-slate-900">= 10 pts</span>
                 </div>
                 <div className="flex justify-between gap-4">
                   <span className="text-slate-500">Compra $50.000</span>
-                  <span className="font-bold text-emerald-900">= 500 pts</span>
+                  <span className="font-bold text-emerald-900">= 50 pts</span>
                 </div>
               </div>
             </div>
@@ -342,7 +342,7 @@ export const LoginPage: React.FC = () => {
             {settings.clubName}.
           </span>
           <span className="text-slate-400">
-            Regla oficial inmutable: $100 de compra = 1 punto Mondino.
+            Regla oficial inmutable: $1.000 de compra = 1 punto Mondino.
           </span>
         </div>
       </footer>

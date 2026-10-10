@@ -134,7 +134,7 @@ export const CustomerQRPage: React.FC = () => {
         </div>
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
           <span>Regla permanente de acumulación</span>
-          <span className="font-semibold text-slate-900 tabular-nums">$100 gastados = 1 punto</span>
+          <span className="font-semibold text-slate-900 tabular-nums">$1.000 gastados = 1 punto</span>
         </div>
       </div>
     </div>

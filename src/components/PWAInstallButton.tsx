@@ -15,10 +15,11 @@ export const PWAInstallButton: React.FC = () => {
       <button
         type="button"
         onClick={install}
-        className="inline-flex min-h-[40px] items-center gap-2 rounded-lg bg-emerald-900 px-3.5 py-2 text-xs font-semibold text-white hover:bg-emerald-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+        className="inline-flex min-h-[34px] sm:min-h-[40px] items-center gap-1.5 sm:gap-2 rounded-lg bg-emerald-900 px-2.5 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold text-white hover:bg-emerald-800 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+        title="Instalar App"
       >
         <Download className="w-3.5 h-3.5 shrink-0" />
-        <span>Instalar App</span>
+        <span className="hidden sm:inline">Instalar App</span>
       </button>
     );
   }
@@ -28,7 +29,7 @@ export const PWAInstallButton: React.FC = () => {
       <button
         type="button"
         onClick={() => setShowGuideModal(true)}
-        className="inline-flex min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+        className="inline-flex min-h-[34px] sm:min-h-[40px] items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         title="Instalar Mondino Club en tu teléfono"
       >
         <Smartphone className="w-3.5 h-3.5 text-emerald-800 shrink-0" />

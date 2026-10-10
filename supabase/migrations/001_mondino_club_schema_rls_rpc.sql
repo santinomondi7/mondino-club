@@ -1,7 +1,7 @@
 -- =============================================================================
 -- MONDINO CLUB — FARMACIA Y PERFUMERÍA MONDINO
 -- Migración 001: Esquema Relacional, Permisos, Triggers, Políticas RLS y RPCs
--- Regla Base Permanente e Inmutable: $100 ARS gastados = 1 punto (1%)
+-- Regla Base Permanente e Inmutable: $1.000 ARS gastados = 1 punto
 -- =============================================================================
 
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
@@ -19,7 +19,7 @@ $$;
 
 
 -- -----------------------------------------------------------------------------
--- 1. TABLA DE CONFIGURACIÓN GLOBAL (Regla base 100 bloqueada por CHECK)
+-- 1. TABLA DE CONFIGURACIÓN GLOBAL (Regla base 1000 bloqueada por CHECK)
 -- -----------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.app_settings (
   id text PRIMARY KEY DEFAULT 'mondino-global-settings' CHECK (id = 'mondino-global-settings'),
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
   primary_color text NOT NULL DEFAULT '#064E3B',
   secondary_color text NOT NULL DEFAULT '#0F766E',
   accent_color text NOT NULL DEFAULT '#D97706',
-  base_points_rate_locked integer NOT NULL DEFAULT 100 CHECK (base_points_rate_locked = 100),
+  base_points_rate_locked integer NOT NULL DEFAULT 1000 CHECK (base_points_rate_locked IN (100, 1000)),
   birthday_bonus_points integer NOT NULL DEFAULT 200 CHECK (birthday_bonus_points >= 0 AND birthday_bonus_points <= 10000),
   referrer_bonus_points integer NOT NULL DEFAULT 150 CHECK (referrer_bonus_points >= 0 AND referrer_bonus_points <= 10000),
   referred_bonus_points integer NOT NULL DEFAULT 100 CHECK (referred_bonus_points >= 0 AND referred_bonus_points <= 10000),
@@ -550,7 +550,7 @@ DROP POLICY IF EXISTS "app_settings_update_admin" ON public.app_settings;
 CREATE POLICY "app_settings_update_admin" ON public.app_settings
   FOR UPDATE TO authenticated
   USING (public.is_active_admin())
-  WITH CHECK (public.is_active_admin() AND base_points_rate_locked = 100);
+  WITH CHECK (public.is_active_admin() AND base_points_rate_locked IN (100, 1000));
 
 -- Políticas para profiles
 DROP POLICY IF EXISTS "profiles_select_own_or_staff" ON public.profiles;
@@ -741,7 +741,7 @@ BEGIN
     v_uid,
     'BIENVENIDA',
     '¡Bienvenido/a a Mondino Club!',
-    'Tu tarjeta digital y tu código QR personal ya están activos. Sumás 1 punto por cada $100 en tus compras.',
+    'Tu tarjeta digital y tu código QR personal ya están activos. Sumás 1 punto por cada $1.000 en tus compras.',
     false,
     '/mi-qr'
   );
@@ -853,7 +853,7 @@ BEGIN
 END;
 $$;
 
--- 4. Cálculo y Previsualización de Puntos en Backend (Regla Inmutable: $100 = 1 punto)
+-- 4. Cálculo y Previsualización de Puntos en Backend (Regla Inmutable: $1.000 = 1 punto)
 CREATE OR REPLACE FUNCTION public.preview_purchase_points(
   p_amount numeric,
   p_category text,
@@ -878,8 +878,8 @@ BEGIN
     RAISE EXCEPTION 'El importe de la compra debe ser mayor a $0.';
   END IF;
 
-  -- REGLA BASE PERMANENTE E INMUTABLE: $100 gastados = 1 punto
-  v_base_points := floor(p_amount / 100.0)::integer;
+  -- REGLA BASE PERMANENTE E INMUTABLE: $1.000 gastados = 1 punto
+  v_base_points := floor(p_amount / 1000.0)::integer;
 
   IF p_promotion_id IS NOT NULL AND trim(p_promotion_id) <> '' THEN
     SELECT * INTO v_best_promo
@@ -1078,7 +1078,7 @@ BEGIN
       v_base_points,
       v_balance_after_base,
       'COMPRA_BASE',
-      'Puntos base 1% ($100 = 1 pto) — Compra en ' || coalesce(p_category, 'Farmacia'),
+      'Puntos base ($1.000 = 1 pto) — Compra en ' || coalesce(p_category, 'Farmacia'),
       trim(p_idempotency_key) || '-base',
       v_operator.email
     );

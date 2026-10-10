@@ -259,7 +259,7 @@ apiApp.post('/api/staff/validate-qr', requireAuth, async (req: AuthenticatedRequ
   }
 });
 
-// Staff: Preview points calculation on backend ($100 = 1 point + active promo)
+// Staff: Preview points calculation on backend ($1.000 = 1 point + active promo)
 apiApp.post(
   '/api/staff/preview-points',
   requireAuth,
@@ -426,7 +426,7 @@ apiApp.post('/api/admin/campaigns', requireAuth, async (req: AuthenticatedReques
   }
 });
 
-// Admin: Update global settings (base rate $100 = 1 point remains locked)
+// Admin: Update global settings (base rate $1.000 = 1 point remains locked)
 apiApp.put('/api/admin/settings', requireAuth, async (req: AuthenticatedRequest, res) => {
   try {
     const settings = req.auth

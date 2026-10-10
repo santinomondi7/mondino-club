@@ -2,17 +2,17 @@ import { AppSettings } from '../types/index.ts';
 
 /**
  * REGLA BASE PERMANENTE E INMUTABLE DE MONDINO CLUB:
- * $100 gastados = 1 punto (Equivalente exacto al 1% del valor de la compra expresado en puntos).
+ * $1.000 gastados = 1 punto.
  * El administrador NO puede modificar esta regla base.
  */
-export const BASE_PESOS_PER_POINT = 100 as const;
+export const BASE_PESOS_PER_POINT = 1000 as const;
 
 export const BASE_POINTS_EXAMPLES = [
-  { amount: 1000, points: 10 },
-  { amount: 10000, points: 100 },
-  { amount: 50000, points: 500 },
-  { amount: 100000, points: 1000 },
-  { amount: 250000, points: 2500 },
+  { amount: 1000, points: 1 },
+  { amount: 10000, points: 10 },
+  { amount: 50000, points: 50 },
+  { amount: 100000, points: 100 },
+  { amount: 250000, points: 250 },
 ] as const;
 
 export const PRODUCT_CATEGORIES = [

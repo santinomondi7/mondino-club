@@ -7,7 +7,7 @@
     "primaryColor": "#064E3B",
     "secondaryColor": "#0F766E",
     "accentColor": "#D97706",
-    "basePointsRateLocked": 100,
+    "basePointsRateLocked": 1000,
     "birthdayBonusPoints": 20,
     "referrerBonusPoints": 15,
     "referredBonusPoints": 10,
@@ -157,7 +157,7 @@
     {
       "id": "promo-perfumeria-plus150",
       "title": "Especial Fragancias Selectivas (+150 pts)",
-      "description": "Sumá 150 puntos extra adicionales al 1% base comprando fragancias importadas seleccionadas.",
+      "description": "Sumá 150 puntos extra adicionales a tus puntos base (.000 = 1 punto) comprando fragancias importadas seleccionadas.",
       "imageUrl": "/images/hero_perfumery_banner.jpg",
       "category": "Perfumería",
       "promoType": "PUNTOS_EXTRA",
@@ -169,7 +169,7 @@
       "usageLimit": 300,
       "currentUsages": 9,
       "isActive": true,
-      "termsConditions": "Acumulable con la regla base permanente ($100 = 1 punto).",
+      "termsConditions": "Acumulable con la regla base permanente (.000 = 1 punto).",
       "createdBy": "usr-admin-santino",
       "createdAt": "2026-10-09T01:31:16.908Z"
     }
@@ -238,7 +238,7 @@
       "id": "news-fragancias-temporada",
       "title": "Nuevas Fragancias Internacionales en Perfumería Mondino",
       "summary": "Conocé los lanzamientos exclusivos de temporada y multiplicá tus puntos.",
-      "description": "Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($100 = 1 punto garantizado).",
+      "description": "Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra (.000 = 1 punto garantizado).",
       "imageUrl": "/images/hero_perfumery_banner.jpg",
       "category": "Lanzamientos",
       "isPublished": true,
@@ -288,7 +288,7 @@
       "amount": 500,
       "balanceAfter": 750,
       "type": "COMPRA_BASE",
-      "description": "Puntos base 1% ($100 = 1 pto) — Compra en Dermocosmética ($50.000)",
+      "description": "Puntos base 1% (.000 = 1 ) — Compra en Dermocosmética ($50.000)",
       "idempotencyKey": "idem-init-1001-base",
       "createdBy": "mostrador@farmaciamondino.com",
       "createdAt": "2026-10-09T01:31:16.908Z"
@@ -314,7 +314,7 @@
       "amount": 1000,
       "balanceAfter": 1300,
       "type": "COMPRA_BASE",
-      "description": "Puntos base 1% ($100 = 1 pto) — Compra en Perfumería ($100.000)",
+      "description": "Puntos base 1% (.000 = 1 ) — Compra en Perfumería ($100.000)",
       "idempotencyKey": "idem-init-1002-base",
       "createdBy": "mostrador@farmaciamondino.com",
       "createdAt": "2026-10-09T01:31:16.908Z"

@@ -188,7 +188,7 @@ function createInitialState(): PreviewDatabaseState {
       id: 'promo-perfumeria-plus150',
       title: 'Especial Fragancias Selectivas (+150 pts)',
       description:
-        'Sumá 150 puntos extra adicionales al 1% base comprando fragancias importadas seleccionadas.',
+        'Sumá 150 puntos extra adicionales a tus puntos base ($1.000 = 1 punto) comprando fragancias importadas seleccionadas.',
       imageUrl: GENERATED_IMAGES.heroPerfumery,
       category: 'Perfumería',
       promoType: 'PUNTOS_EXTRA',
@@ -200,7 +200,7 @@ function createInitialState(): PreviewDatabaseState {
       usageLimit: 300,
       currentUsages: 9,
       isActive: true,
-      termsConditions: 'Acumulable con la regla base permanente ($100 = 1 punto).',
+      termsConditions: 'Acumulable con la regla base permanente ($1.000 = 1 punto).',
       createdBy: adminProfile.id,
       createdAt: now,
     },
@@ -277,7 +277,7 @@ function createInitialState(): PreviewDatabaseState {
       title: 'Nuevas Fragancias Internacionales en Perfumería Mondino',
       summary: 'Conocé los lanzamientos exclusivos de temporada y multiplicá tus puntos.',
       description:
-        'Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($100 = 1 punto garantizado).',
+        'Ya ingresaron las nuevas colecciones de eau de parfum importados. Acercate a nuestro espacio de perfumería para probarlas y acumular puntos con cada compra ($1.000 = 1 punto garantizado).',
       imageUrl: GENERATED_IMAGES.heroPerfumery,
       category: 'Lanzamientos',
       isPublished: true,
@@ -295,9 +295,9 @@ function createInitialState(): PreviewDatabaseState {
       employeeId: staffProfile.id,
       amount: 50000,
       category: 'Dermocosmética',
-      basePoints: 500,
-      promoPoints: 500,
-      totalPoints: 1000,
+      basePoints: 50,
+      promoPoints: 50,
+      totalPoints: 100,
       promotionId: 'promo-dermo-x2',
       notes: 'Serum Ácido Hialurónico + Fotoprotector ISDIN Fusion Water',
       status: 'COMPLETADA',
@@ -310,9 +310,9 @@ function createInitialState(): PreviewDatabaseState {
       employeeId: staffProfile.id,
       amount: 100000,
       category: 'Perfumería',
-      basePoints: 1000,
+      basePoints: 100,
       promoPoints: 150,
-      totalPoints: 1150,
+      totalPoints: 250,
       promotionId: 'promo-perfumeria-plus150',
       notes: 'Eau de Parfum Importado 100ml',
       status: 'COMPLETADA',
@@ -326,10 +326,10 @@ function createInitialState(): PreviewDatabaseState {
       customerId: client1.id,
       purchaseId: 'pur-init-1001',
       promotionId: null,
-      amount: 500,
-      balanceAfter: 750,
+      amount: 50,
+      balanceAfter: 300,
       type: 'COMPRA_BASE',
-      description: 'Puntos base 1% ($100 = 1 pto) — Compra en Dermocosmética ($50.000)',
+      description: 'Puntos base ($1.000 = 1 pto) — Compra en Dermocosmética ($50.000)',
       idempotencyKey: 'idem-init-1001-base',
       createdBy: staffProfile.email,
       createdAt: now,
@@ -339,8 +339,8 @@ function createInitialState(): PreviewDatabaseState {
       customerId: client1.id,
       purchaseId: 'pur-init-1001',
       promotionId: 'promo-dermo-x2',
-      amount: 500,
-      balanceAfter: 1250,
+      amount: 50,
+      balanceAfter: 350,
       type: 'PROMOCION_COMPRA',
       description: 'Bonificación promoción: Semana Dermocosmética: Puntos x2',
       idempotencyKey: 'idem-init-1001-promo',
@@ -352,10 +352,10 @@ function createInitialState(): PreviewDatabaseState {
       customerId: adminProfile.id,
       purchaseId: 'pur-init-1002',
       promotionId: null,
-      amount: 1000,
-      balanceAfter: 1300,
+      amount: 100,
+      balanceAfter: 400,
       type: 'COMPRA_BASE',
-      description: 'Puntos base 1% ($100 = 1 pto) — Compra en Perfumería ($100.000)',
+      description: 'Puntos base ($1.000 = 1 pto) — Compra en Perfumería ($100.000)',
       idempotencyKey: 'idem-init-1002-base',
       createdBy: staffProfile.email,
       createdAt: now,
@@ -1004,7 +1004,7 @@ export function previewCalculatePoints(input: {
     throw new Error('El importe de la compra debe ser mayor a $0.');
   }
 
-  // REGLA BASE INMUTABLE: $100 = 1 punto
+  // REGLA BASE INMUTABLE: $1.000 = 1 punto
   const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
   let promoPoints = 0;
   let bestPromo: PromotionItem | null = null;
@@ -1145,7 +1145,7 @@ export function previewRegisterPurchase(
       amount: calc.basePoints,
       balanceAfter: balanceAfterBase,
       type: 'COMPRA_BASE',
-      description: `Puntos base 1% ($100 = 1 pto) — Compra en ${input.category}`,
+      description: `Puntos base ($1.000 = 1 pto) — Compra en ${input.category}`,
       idempotencyKey: `${key}-base`,
       createdBy: actor.email,
       createdAt: now,
@@ -1594,7 +1594,7 @@ export function previewUpdateSettingsAdmin(
       ...state.settings,
       ...updates,
       appLogoUrl: DEFAULT_APP_SETTINGS.appLogoUrl,
-      basePointsRateLocked: BASE_PESOS_PER_POINT, // INMUTABLE: $100 = 1 punto
+      basePointsRateLocked: BASE_PESOS_PER_POINT, // INMUTABLE: $1.000 = 1 punto
       birthdayBonusPoints: BIRTHDAY_BONUS_POINTS, // 20 puntos por cumpleaños
       referrerBonusPoints: REFERRER_BONUS_POINTS, // 15 puntos por invitar a un amigo
       referredBonusPoints: REFERRED_BONUS_POINTS, // 10 puntos por ser invitado
