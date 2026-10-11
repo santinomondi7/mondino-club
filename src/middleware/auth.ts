@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient, User as SupabaseAuthUser } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient, type User as SupabaseAuthUser } from '@supabase/supabase-js';
 
 export interface VerifiedAuthContext {
   user: SupabaseAuthUser;
@@ -10,6 +10,8 @@ export interface VerifiedAuthContext {
 const DEFAULT_PUBLIC_SUPABASE_URL = 'https://vpjwmarisctnqjzpyakz.supabase.co';
 const DEFAULT_PUBLIC_SUPABASE_ANON_KEY =
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwandtYXJpc2N0bnFqenB5YWt6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE1MDc0ODgsImV4cCI6MjEwNzA4MzQ4OH0.QJ7wIXI4t0u9aNgp-QQdbfYrFN_KpFYLMnVJFdz7iV4';
+const DEFAULT_SERVER_SERVICE_ROLE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZwandtYXJpc2N0bnFqenB5YWt6Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MTUwNzQ4OCwiZXhwIjoyMTA3MDgzNDg4fQ.wBBcFSQaRixqcVaBzqFdEZbgPJB-npjvrOljwn4TjPM';
 
 export function getServerSupabaseConfig() {
   const rawUrl = (
@@ -24,7 +26,7 @@ export function getServerSupabaseConfig() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     ''
   ).trim();
-  const serviceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+  const rawServiceRoleKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
 
   const url =
     rawUrl && rawUrl !== 'https://tu-proyecto.supabase.co'
@@ -35,6 +37,13 @@ export function getServerSupabaseConfig() {
     rawAnonKey && rawAnonKey !== 'tu-anon-public-key' && rawAnonKey !== 'tu-supabase-anon-key'
       ? rawAnonKey
       : DEFAULT_PUBLIC_SUPABASE_ANON_KEY;
+
+  const serviceRoleKey =
+    rawServiceRoleKey && rawServiceRoleKey !== 'tu-service-role-key-privada'
+      ? rawServiceRoleKey
+      : url === DEFAULT_PUBLIC_SUPABASE_URL
+        ? DEFAULT_SERVER_SERVICE_ROLE_KEY
+        : '';
 
   const isConfigured = Boolean(url && anonKey);
 

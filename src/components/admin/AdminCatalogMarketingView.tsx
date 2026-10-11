@@ -638,27 +638,37 @@ export const AdminCatalogMarketingView: React.FC<AdminCatalogMarketingViewProps>
                 </div>
 
                 {/* Previsualización clara de la regla antes de confirmar */}
-                <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-1.5 text-xs text-emerald-950">
-                  <p className="font-bold flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-emerald-800" />
-                    Previsualización de regla aplicada (sobre una compra ejemplo de $100.000):
-                  </p>
-                  <p className="font-mono">
-                    • Puntos base ($1.000 = 1 punto): 100 puntos
-                    <br />• Bonificación promoción:{' '}
-                    {editingPromo.promoType === 'MULTIPLICADOR'
-                      ? `+${formatPoints(
-                          Math.round(100 * (Number(editingPromo.multiplier || 2) - 1))
-                        )} puntos (Multiplicador x${editingPromo.multiplier || 2})`
-                      : `+${formatPoints(Number(editingPromo.extraPoints || 0))} puntos extra`}
-                    <br />• <strong>Total a acreditar al cliente:</strong>{' '}
-                    {editingPromo.promoType === 'MULTIPLICADOR'
-                      ? `${formatPoints(
-                          100 + Math.round(100 * (Number(editingPromo.multiplier || 2) - 1))
-                        )} puntos`
-                      : `${formatPoints(100 + Number(editingPromo.extraPoints || 0))} puntos`}
-                  </p>
-                </div>
+                {(() => {
+                  const sampleAmount = 100000;
+                  const sampleBase = Math.floor(
+                    sampleAmount / (settings.basePointsRateLocked || 1000)
+                  );
+                  const samplePromo =
+                    editingPromo.promoType === 'MULTIPLICADOR'
+                      ? Math.max(
+                          0,
+                          Math.round(sampleBase * (Number(editingPromo.multiplier || 2) - 1))
+                        )
+                      : Math.max(0, Number(editingPromo.extraPoints || 0));
+                  return (
+                    <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-4 space-y-1.5 text-xs text-emerald-950">
+                      <p className="font-bold flex items-center gap-1.5">
+                        <Sparkles className="w-4 h-4 text-emerald-800" />
+                        Previsualización de regla aplicada (sobre una compra ejemplo de $100.000):
+                      </p>
+                      <p className="font-mono">
+                        • Puntos base (${formatPoints(settings.basePointsRateLocked)} = 1 punto):{' '}
+                        {formatPoints(sampleBase)} puntos
+                        <br />• Bonificación promoción:{' '}
+                        {editingPromo.promoType === 'MULTIPLICADOR'
+                          ? `+${formatPoints(samplePromo)} puntos (Multiplicador x${editingPromo.multiplier || 2})`
+                          : `+${formatPoints(samplePromo)} puntos extra`}
+                        <br />• <strong>Total a acreditar al cliente:</strong>{' '}
+                        {formatPoints(sampleBase + samplePromo)} puntos
+                      </p>
+                    </div>
+                  );
+                })()}
 
                 <div className="flex items-center gap-3 pt-2">
                   <button

@@ -641,7 +641,7 @@ export function previewGetBootstrapState(actor: UserProfile) {
       customerId: actor.id,
       type: 'CUMPLEANOS',
       title: `¡Feliz cumpleaños, ${actor.firstName}! 🎂`,
-      message: `Hoy tenés disponibles +${BIRTHDAY_BONUS_POINTS} puntos de regalo en Mondino Club. Ingresá a Mi Perfil o Inicio para acreditarlos.`,
+      message: `Hoy tenés disponibles +${state.settings.birthdayBonusPoints} puntos de regalo en Mondino Club. Ingresá a Mi Perfil o Inicio para acreditarlos.`,
       isRead: false,
       actionUrl: '/perfil',
       createdAt: new Date().toISOString(),
@@ -731,7 +731,7 @@ export function previewClaimBirthdayBonus(actor: UserProfile): {
   if ((target.birthdayBonusClaimedYear || 0) >= currentYear) {
     throw new Error(`Ya acreditaste tu bonus de cumpleaños correspondiente al año ${currentYear}.`);
   }
-  const bonus = BIRTHDAY_BONUS_POINTS;
+  const bonus = Number(state.settings.birthdayBonusPoints || BIRTHDAY_BONUS_POINTS);
   target.pointsBalance += bonus;
   target.birthdayBonusClaimedYear = currentYear;
   target.updatedAt = new Date().toISOString();
@@ -777,8 +777,8 @@ export function previewApplyReferralCode(
     throw new Error('No podés utilizar tu propio código de referido.');
   }
 
-  const referrerBonus = REFERRER_BONUS_POINTS;
-  const referredBonus = REFERRED_BONUS_POINTS;
+  const referrerBonus = Number(state.settings.referrerBonusPoints || REFERRER_BONUS_POINTS);
+  const referredBonus = Number(state.settings.referredBonusPoints || REFERRED_BONUS_POINTS);
   const now = new Date().toISOString();
 
   referred.referredById = referrer.id;
@@ -1005,7 +1005,11 @@ export function previewCalculatePoints(input: {
   }
 
   // REGLA BASE INMUTABLE: $1.000 = 1 punto
-  const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
+  const rate =
+    Number(state.settings.basePointsRateLocked) === BASE_PESOS_PER_POINT
+      ? state.settings.basePointsRateLocked
+      : BASE_PESOS_PER_POINT;
+  const basePoints = Math.floor(numAmount / rate);
   let promoPoints = 0;
   let bestPromo: PromotionItem | null = null;
   const today = new Date().toISOString().slice(0, 10);

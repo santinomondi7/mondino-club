@@ -26,7 +26,7 @@ import {
 import { AdminCatalogMarketingView } from '../components/admin/AdminCatalogMarketingView.tsx';
 
 export const StaffRegisterPurchasePage: React.FC = () => {
-  const { adminData, promotions, refreshAllData } = useAuth();
+  const { adminData, promotions, settings, refreshAllData } = useAuth();
 
   const [mode, setMode] = useState<'compra-qr' | 'validar-canje' | 'beneficios' | 'novedades'>(
     'compra-qr'
@@ -368,7 +368,10 @@ export const StaffRegisterPurchasePage: React.FC = () => {
         });
         setPreview(res);
       } catch {
-        const fallbackBase = calculateClientPreviewBasePoints(numAmount);
+        const fallbackBase = calculateClientPreviewBasePoints(
+          numAmount,
+          settings.basePointsRateLocked
+        );
         setPreview({
           amount: numAmount,
           basePoints: fallbackBase,

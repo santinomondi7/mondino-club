@@ -29,10 +29,10 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
   primary_color text NOT NULL DEFAULT '#064E3B',
   secondary_color text NOT NULL DEFAULT '#0F766E',
   accent_color text NOT NULL DEFAULT '#D97706',
-  base_points_rate_locked integer NOT NULL DEFAULT 1000 CHECK (base_points_rate_locked IN (100, 1000)),
-  birthday_bonus_points integer NOT NULL DEFAULT 200 CHECK (birthday_bonus_points >= 0 AND birthday_bonus_points <= 10000),
-  referrer_bonus_points integer NOT NULL DEFAULT 150 CHECK (referrer_bonus_points >= 0 AND referrer_bonus_points <= 10000),
-  referred_bonus_points integer NOT NULL DEFAULT 100 CHECK (referred_bonus_points >= 0 AND referred_bonus_points <= 10000),
+  base_points_rate_locked integer NOT NULL DEFAULT 1000 CHECK (base_points_rate_locked = 1000),
+  birthday_bonus_points integer NOT NULL DEFAULT 20 CHECK (birthday_bonus_points = 20),
+  referrer_bonus_points integer NOT NULL DEFAULT 15 CHECK (referrer_bonus_points = 15),
+  referred_bonus_points integer NOT NULL DEFAULT 10 CHECK (referred_bonus_points = 10),
   notifications_enabled boolean NOT NULL DEFAULT true,
   whatsapp_contact text NOT NULL DEFAULT '+54 9 3492 42-0000',
   address text NOT NULL DEFAULT 'Av. Santa Fe 1250, Rafaela, Santa Fe',
@@ -550,7 +550,13 @@ DROP POLICY IF EXISTS "app_settings_update_admin" ON public.app_settings;
 CREATE POLICY "app_settings_update_admin" ON public.app_settings
   FOR UPDATE TO authenticated
   USING (public.is_active_admin())
-  WITH CHECK (public.is_active_admin() AND base_points_rate_locked IN (100, 1000));
+  WITH CHECK (
+    public.is_active_admin()
+    AND base_points_rate_locked = 1000
+    AND birthday_bonus_points = 20
+    AND referrer_bonus_points = 15
+    AND referred_bonus_points = 10
+  );
 
 -- Políticas para profiles
 DROP POLICY IF EXISTS "profiles_select_own_or_staff" ON public.profiles;
@@ -873,13 +879,23 @@ DECLARE
   v_candidate_bonus integer;
   v_today text := to_char( current_date, 'YYYY-MM-DD' );
   v_applied_json jsonb := NULL;
+  v_base_rate integer := 1000;
 BEGIN
   IF p_amount IS NULL OR p_amount <= 0 OR p_amount > 50000000 THEN
     RAISE EXCEPTION 'El importe de la compra debe ser mayor a $0.';
   END IF;
 
+  SELECT coalesce(base_points_rate_locked, 1000)
+  INTO v_base_rate
+  FROM public.app_settings
+  WHERE id = 'mondino-global-settings';
+
+  IF v_base_rate <> 1000 THEN
+    v_base_rate := 1000;
+  END IF;
+
   -- REGLA BASE PERMANENTE E INMUTABLE: $1.000 gastados = 1 punto
-  v_base_points := floor(p_amount / 1000.0)::integer;
+  v_base_points := floor(p_amount / v_base_rate::numeric)::integer;
 
   IF p_promotion_id IS NOT NULL AND trim(p_promotion_id) <> '' THEN
     SELECT * INTO v_best_promo
@@ -1669,7 +1685,7 @@ BEGIN
   END IF;
 
   SELECT * INTO v_settings FROM public.app_settings WHERE id = 'mondino-global-settings';
-  v_bonus := coalesce(v_settings.birthday_bonus_points, 200);
+  v_bonus := coalesce(v_settings.birthday_bonus_points, 20);
   v_new_balance := v_customer.points_balance + v_bonus;
 
   PERFORM set_config('mondino.internal_trusted_op', 'true', true);
@@ -1752,8 +1768,8 @@ BEGIN
   END IF;
 
   SELECT * INTO v_settings FROM public.app_settings WHERE id = 'mondino-global-settings';
-  v_referrer_bonus := coalesce(v_settings.referrer_bonus_points, 150);
-  v_referred_bonus := coalesce(v_settings.referred_bonus_points, 100);
+  v_referrer_bonus := coalesce(v_settings.referrer_bonus_points, 15);
+  v_referred_bonus := coalesce(v_settings.referred_bonus_points, 10);
 
   v_referred_new_balance := v_referred.points_balance + v_referred_bonus;
   v_referrer_new_balance := v_referrer.points_balance + v_referrer_bonus;

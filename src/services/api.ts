@@ -332,7 +332,10 @@ function mapSettingsRow(row?: Record<string, any> | null): AppSettings {
     primaryColor: row.primary_color || DEFAULT_APP_SETTINGS.primaryColor,
     secondaryColor: row.secondary_color || DEFAULT_APP_SETTINGS.secondaryColor,
     accentColor: row.accent_color || DEFAULT_APP_SETTINGS.accentColor,
-    basePointsRateLocked: BASE_PESOS_PER_POINT,
+    basePointsRateLocked:
+      Number(row.base_points_rate_locked) === BASE_PESOS_PER_POINT
+        ? Number(row.base_points_rate_locked)
+        : BASE_PESOS_PER_POINT,
     birthdayBonusPoints: Number(
       row.birthday_bonus_points ?? DEFAULT_APP_SETTINGS.birthdayBonusPoints
     ),
@@ -723,15 +726,23 @@ export const mondinoApi = {
       if (!Number.isFinite(numAmount) || numAmount <= 0) {
         throw new Error('El importe de la compra debe ser mayor a $0.');
       }
-      const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
+      const [settingsRes, promoRes] = await Promise.all([
+        supabase
+          .from('app_settings')
+          .select('*')
+          .eq('id', 'mondino-global-settings')
+          .maybeSingle(),
+        supabase
+          .from('promotions')
+          .select('*')
+          .eq('is_active', true),
+      ]);
+      const dbSettings = mapSettingsRow(settingsRes.data);
+      const basePoints = Math.floor(numAmount / dbSettings.basePointsRateLocked);
       let promoPoints = 0;
       let bestPromo: PromotionItem | null = null;
       const today = new Date().toISOString().slice(0, 10);
-      const { data: promoRows } = await supabase
-        .from('promotions')
-        .select('*')
-        .eq('is_active', true);
-      const promotions = (promoRows || []).map(mapPromotionRow);
+      const promotions = (promoRes.data || []).map(mapPromotionRow);
       const categoryClean = (input.category || 'Todos').trim().toLowerCase();
 
       if (input.promotionId && input.promotionId.trim() !== '') {
@@ -1076,9 +1087,6 @@ export const mondinoApi = {
         primary_color: settings.primaryColor,
         secondary_color: settings.secondaryColor,
         accent_color: settings.accentColor,
-        birthday_bonus_points: settings.birthdayBonusPoints,
-        referrer_bonus_points: settings.referrerBonusPoints,
-        referred_bonus_points: settings.referredBonusPoints,
         notifications_enabled: settings.notificationsEnabled,
         whatsapp_contact: settings.whatsappContact,
         address: settings.address,

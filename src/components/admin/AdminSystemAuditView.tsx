@@ -107,9 +107,6 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
         primaryColor,
         secondaryColor,
         accentColor,
-        birthdayBonusPoints: 20,
-        referrerBonusPoints: 15,
-        referredBonusPoints: 10,
         notificationsEnabled: true,
         whatsappContact,
         address,
@@ -578,14 +575,19 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
             <Lock className="w-5 h-5 text-emerald-900 shrink-0 mt-0.5" />
             <div className="space-y-1 text-xs text-emerald-950">
               <p className="font-bold">
-                Reglas Oficiales de Puntos de Mondino Club: $1.000 = 1 punto · Cumpleaños +20 pts ·
-                Invitar amigo +15 pts · Ser invitado +10 pts
+                Reglas Oficiales de Puntos de Mondino Club: $
+                {formatPoints(settings.basePointsRateLocked)} = 1 punto · Cumpleaños +
+                {settings.birthdayBonusPoints} pts · Invitar amigo +
+                {settings.referrerBonusPoints} pts · Ser invitado +
+                {settings.referredBonusPoints} pts
               </p>
               <p>
-                De acuerdo con la política de Farmacia y Perfumería Mondino, la regla base de $1.000
-                = 1 punto y las bonificaciones fijas (20 puntos por cumpleaños, 15 puntos por
-                invitar a un amigo y 10 puntos por ser invitado) están establecidas de forma
-                permanente.
+                De acuerdo con la política de Farmacia y Perfumería Mondino, la regla base de $
+                {formatPoints(settings.basePointsRateLocked)} = 1 punto y las bonificaciones
+                oficiales ({settings.birthdayBonusPoints} puntos por cumpleaños,{' '}
+                {settings.referrerBonusPoints} puntos por invitar a un amigo y{' '}
+                {settings.referredBonusPoints} puntos por unirse con un código de invitación) están
+                definidas en la base de datos y se consultan directamente desde allí.
               </p>
             </div>
           </div>
@@ -642,34 +644,34 @@ export const AdminSystemAuditView: React.FC<AdminSystemAuditViewProps> = ({
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Puntos por cumpleaños (fijo)
+                  Puntos por cumpleaños (en BD)
                 </label>
                 <input
                   type="number"
                   disabled
-                  value={20}
+                  value={settings.birthdayBonusPoints}
                   className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-slate-100 text-slate-600 px-3.5 py-2 text-xs font-mono font-bold cursor-not-allowed"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Puntos por invitar a un amigo (fijo)
+                  Puntos por invitar a un amigo (en BD)
                 </label>
                 <input
                   type="number"
                   disabled
-                  value={15}
+                  value={settings.referrerBonusPoints}
                   className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-slate-100 text-slate-600 px-3.5 py-2 text-xs font-mono font-bold cursor-not-allowed"
                 />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Puntos por ser invitado (fijo)
+                  Puntos por ser invitado (en BD)
                 </label>
                 <input
                   type="number"
                   disabled
-                  value={10}
+                  value={settings.referredBonusPoints}
                   className="w-full min-h-[42px] rounded-xl border border-slate-200 bg-slate-100 text-slate-600 px-3.5 py-2 text-xs font-mono font-bold cursor-not-allowed"
                 />
               </div>

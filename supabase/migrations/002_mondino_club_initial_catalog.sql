@@ -28,15 +28,20 @@ INSERT INTO public.app_settings (
   '#0F766E',
   '#D97706',
   1000,
-  200,
-  150,
-  100,
+  20,
+  15,
+  10,
   true,
-  '+54 9 3492 42-0000',
-  'Av. Santa Fe 1250, Rafaela, Santa Fe',
-  'Lun a Sáb de 08:00 a 21:00 hs'
+  '+54 9 03541 59-0624',
+  'Av. San Martín 59, Villa Carlos Paz, Córdoba',
+  'Lun a Sáb de 09:00 a 23:00hs, y Dom de 09:00 a 14:00hs y 17:00 a 23:00hs'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET
+  base_points_rate_locked = 1000,
+  birthday_bonus_points = 20,
+  referrer_bonus_points = 15,
+  referred_bonus_points = 10,
+  updated_at = now();
 
 -- Promociones Iniciales
 INSERT INTO public.promotions (

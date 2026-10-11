@@ -16,20 +16,26 @@ Sistema integral de fidelización, puntos por compras, códigos QR personales, b
 
 ---
 
-## 2. Regla Base Permanente de Puntos
+## 2. Regla Base Permanente de Puntos y Bonificaciones en Base de Datos
 
-La regla base del programa es **permanente, exacta e inmodificable** incluso para los administradores:
+La regla base del programa es **permanente, exacta e inmodificable** incluso para los administradores, y está bloqueada a nivel de esquema en PostgreSQL (`CHECK (base_points_rate_locked = 1000)`):
 
-$$\text{\$100 ARS gastados} = \text{1 punto Mondino}$$
+$$\text{\$1.000 ARS gastados} = \text{1 punto Mondino}$$
 
-$$\text{Puntos Base} = \left\lfloor \frac{\text{Monto de Compra en ARS}}{100} \right\rfloor$$
+$$\text{Puntos Base} = \left\lfloor \frac{\text{Monto de Compra en ARS}}{1000} \right\rfloor$$
 
-* **$1.000** = 10 puntos base.
-* **$10.000** = 100 puntos base.
-* **$50.000** = 500 puntos base.
-* **$100.000** = 1.000 puntos base.
+* **$1.000** = 1 punto base.
+* **$10.000** = 10 puntos base.
+* **$50.000** = 50 puntos base.
+* **$100.000** = 100 puntos base.
 
-La función SQL `public.calculate_purchase_points` y el módulo `src/utils/points.ts` aplican esta constante fija (`100`) y suman las promociones activas configuradas (multiplicadores, puntos extra o descuentos) que cumplan con vigencia, categoría, monto mínimo, día de la semana y medio de pago.
+Las bonificaciones oficiales también se almacenan y validan en `public.app_settings` en la base de datos, desde donde la interfaz y las funciones transaccionales las consultan como única fuente de verdad:
+
+* **Bono de cumpleaños (`birthday_bonus_points`)**: **20 puntos** (`CHECK (birthday_bonus_points = 20)`).
+* **Bono por invitar a un amigo (`referrer_bonus_points`)**: **15 puntos** (`CHECK (referrer_bonus_points = 15)`).
+* **Bono por unirse con código de invitación (`referred_bonus_points`)**: **10 puntos** (`CHECK (referred_bonus_points = 10)`).
+
+La función SQL `public.preview_purchase_points`, `public.register_purchase_atomic` y el repositorio del servidor consultan la configuración en la base de datos (`1000`) y suman las promociones activas configuradas (multiplicadores o puntos extra) que cumplan con vigencia, categoría, monto mínimo y límite de uso.
 
 ---
 
@@ -38,14 +44,14 @@ La función SQL `public.calculate_purchase_points` y el módulo `src/utils/point
 Toda la seguridad está implementada en `/supabase/migrations/001_mondino_club_schema_rls_rpc.sql`:
 
 1. **Bloqueo de Escalada de Privilegios y Saldo**:
-   * El registro normal (`ensure_my_profile` y el trigger `handle_new_auth_user`) asigna siempre `role = 'CLIENTE'` y `points_balance = welcome_bonus_points`.
-   * Se revocó el permiso de `INSERT` y `UPDATE` general sobre `public.profiles` para `authenticated` y `anon`, otorgando `UPDATE` únicamente sobre las columnas de datos personales (`full_name`, `dni`, `phone`, `birth_date`, `pref_categories`, `opt_in_promos`, `opt_in_points_alerts`, `opt_in_birthday`, `updated_at`).
-   * Además, el trigger `trg_protect_profile_sensitive_columns` bloquea a nivel de fila cualquier intento de modificar `role`, `status`, `points_balance`, `qr_token`, `referral_code`, `referral_reward_granted` o `last_birthday_bonus_year` fuera de las funciones transaccionales autorizadas.
+   * El registro normal (`ensure_my_profile` y el trigger `handle_new_auth_user`) asigna siempre `role = 'CLIENTE'` y `points_balance = 0`.
+   * Se revocó el permiso de `INSERT` y `UPDATE` general sobre `public.profiles` para `authenticated` y `anon`, otorgando `UPDATE` únicamente sobre las columnas de datos personales (`first_name`, `last_name`, `phone`, `birth_date`, `notification_preferences`, `updated_at`).
+   * Además, el trigger `trg_protect_profile_sensitive_columns` bloquea a nivel de fila cualquier intento de modificar `role`, `status`, `points_balance`, `qr_token`, `referral_code`, `referred_by_id` o `birthday_bonus_claimed_year` fuera de las funciones transaccionales autorizadas.
 2. **Operaciones Atómicas e Idempotentes**:
-   * **Registro de compras (`register_purchase_atomic`)**: Exclusivo para `EMPLEADO` o `ADMINISTRADOR` con estado `ACTIVO`. Bloquea la fila del cliente (`FOR UPDATE`), verifica `idempotency_key` única, calcula puntos base (`floor(amount / 100)`) y promociones en la base de datos, inserta la compra, registra asientos en `points_transactions`, actualiza `points_balance`, notifica al cliente y guarda auditoría en una sola transacción.
+   * **Registro de compras (`register_purchase_atomic`)**: Exclusivo para `EMPLEADO` o `ADMINISTRADOR` con estado `ACTIVO`. Bloquea la fila del cliente (`FOR UPDATE`), verifica `idempotency_key` única, calcula puntos base (`floor(amount / 1000)`) y promociones en la base de datos, inserta la compra, registra asientos en `points_transactions`, actualiza `points_balance`, notifica al cliente y guarda auditoría en una sola transacción.
    * **Anulación de compras (`void_purchase_atomic`)**: Exclusiva para `EMPLEADO` o `ADMINISTRADOR`. Revierte exactamente los puntos otorgados y registra el asiento de `ANULACION_COMPRA` y el log de auditoría.
    * **Canje de beneficios (`redeem_benefit_atomic`)**: Bloquea perfil y beneficio (`FOR UPDATE`), verifica vigencia, stock, límite por cliente y saldo suficiente, descuenta stock y puntos, genera un código único `MC-XXXXXX` y crea el movimiento en el libro mayor.
-   * **Validación de canjes en mostrador (`validate_redemption_code_atomic`)**: Exclusiva para personal autorizado; impide que un código sea utilizado más de una vez.
+   * **Validación de canjes en mostrador (`validate_redemption_for_staff`)**: Exclusiva para personal autorizado; impide que un código sea utilizado más de una vez.
 
 ---
 

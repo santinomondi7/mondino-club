@@ -274,6 +274,10 @@ export function mapSettingsRow(row?: Record<string, any> | null): AppSettings {
     rawHours === 'Lun a Sáb de 08:00 a 21:00 hs';
 
   const decodedLogos = decodeLogoAndBanner(row.logo_url);
+  const dbRate = Number(row.base_points_rate_locked);
+  const dbBirthdayBonus = Number(row.birthday_bonus_points);
+  const dbReferrerBonus = Number(row.referrer_bonus_points);
+  const dbReferredBonus = Number(row.referred_bonus_points);
 
   return {
     id: row.id || DEFAULT_APP_SETTINGS.id,
@@ -284,10 +288,22 @@ export function mapSettingsRow(row?: Record<string, any> | null): AppSettings {
     primaryColor: row.primary_color || DEFAULT_APP_SETTINGS.primaryColor,
     secondaryColor: row.secondary_color || DEFAULT_APP_SETTINGS.secondaryColor,
     accentColor: row.accent_color || DEFAULT_APP_SETTINGS.accentColor,
-    basePointsRateLocked: BASE_PESOS_PER_POINT,
-    birthdayBonusPoints: BIRTHDAY_BONUS_POINTS,
-    referrerBonusPoints: REFERRER_BONUS_POINTS,
-    referredBonusPoints: REFERRED_BONUS_POINTS,
+    basePointsRateLocked:
+      Number.isFinite(dbRate) && dbRate === BASE_PESOS_PER_POINT
+        ? dbRate
+        : BASE_PESOS_PER_POINT,
+    birthdayBonusPoints:
+      Number.isFinite(dbBirthdayBonus) && dbBirthdayBonus > 0
+        ? dbBirthdayBonus
+        : DEFAULT_APP_SETTINGS.birthdayBonusPoints,
+    referrerBonusPoints:
+      Number.isFinite(dbReferrerBonus) && dbReferrerBonus > 0
+        ? dbReferrerBonus
+        : DEFAULT_APP_SETTINGS.referrerBonusPoints,
+    referredBonusPoints:
+      Number.isFinite(dbReferredBonus) && dbReferredBonus > 0
+        ? dbReferredBonus
+        : DEFAULT_APP_SETTINGS.referredBonusPoints,
     notificationsEnabled: Boolean(
       row.notifications_enabled ?? DEFAULT_APP_SETTINGS.notificationsEnabled
     ),
@@ -472,7 +488,7 @@ export async function getBootstrapStateFromSupabase(auth: VerifiedAuthContext) {
       customerId: profile.id,
       type: 'CUMPLEANOS',
       title: `¡Feliz cumpleaños, ${profile.firstName}! 🎂`,
-      message: `Hoy tenés disponibles +${BIRTHDAY_BONUS_POINTS} puntos de regalo en Mondino Club. Ingresá a Mi Perfil o Inicio para acreditarlos.`,
+      message: `Hoy tenés disponibles +${catalog.settings.birthdayBonusPoints} puntos de regalo en Mondino Club. Ingresá a Mi Perfil o Inicio para acreditarlos.`,
       isRead: false,
       actionUrl: '/perfil',
       createdAt: new Date().toISOString(),
@@ -690,18 +706,26 @@ export async function previewPointsForStaffInSupabase(
     throw new Error('El importe de la compra debe ser mayor a $0.');
   }
 
-  // REGLA BASE INMUTABLE: $1.000 = 1 punto
-  const basePoints = Math.floor(numAmount / BASE_PESOS_PER_POINT);
+  const [settingsRes, promoRes] = await Promise.all([
+    auth.userClient
+      .from('app_settings')
+      .select('*')
+      .eq('id', 'mondino-global-settings')
+      .maybeSingle(),
+    auth.userClient
+      .from('promotions')
+      .select('*')
+      .eq('is_active', true),
+  ]);
+
+  const dbSettings = mapSettingsRow(settingsRes.data);
+  const baseRate = dbSettings.basePointsRateLocked; // $1.000 = 1 punto
+  const basePoints = Math.floor(numAmount / baseRate);
   let promoPoints = 0;
   let bestPromo: PromotionItem | null = null;
   const today = new Date().toISOString().slice(0, 10);
 
-  const { data: promoRows } = await auth.userClient
-    .from('promotions')
-    .select('*')
-    .eq('is_active', true);
-
-  const promotions = (promoRows || []).map(mapPromotionRow);
+  const promotions = (promoRes.data || []).map(mapPromotionRow);
   const categoryClean = (input.category || 'Todos').trim().toLowerCase();
 
   if (input.promotionId && input.promotionId.trim() !== '') {
@@ -862,7 +886,26 @@ export async function registerPurchaseForStaffInSupabase(
   });
 
   if (insertPurErr) {
-    throw new Error(insertPurErr.message || 'Error al registrar la compra.');
+    // Fallback a RPC SECURITY DEFINER si el entorno no dispone de service_role en adminClient
+    const { data: rpcData, error: rpcErr } = await auth.userClient.rpc('register_purchase_atomic', {
+      p_idempotency_key: key,
+      p_customer_id: customer.id,
+      p_amount: numAmount,
+      p_category: categoryName,
+      p_promotion_id: calc.appliedPromotion?.id || null,
+      p_notes: (input.notes || '').trim(),
+    });
+    if (!rpcErr && rpcData) {
+      return rpcData as {
+        purchaseId: string;
+        customerName: string;
+        basePoints: number;
+        promoPoints: number;
+        totalPoints: number;
+        newBalance: number;
+      };
+    }
+    throw new Error(insertPurErr.message || rpcErr?.message || 'Error al registrar la compra.');
   }
 
   if (calc.basePoints > 0) {
@@ -1234,9 +1277,9 @@ export async function updateSettingsAdminInSupabase(
       ? settings.secondaryColor || current.secondaryColor
       : current.secondaryColor,
     accent_color: isFullAdmin ? settings.accentColor || current.accentColor : current.accentColor,
-    birthday_bonus_points: BIRTHDAY_BONUS_POINTS, // 20 puntos por cumpleaños
-    referrer_bonus_points: REFERRER_BONUS_POINTS, // 15 puntos por invitar a un amigo
-    referred_bonus_points: REFERRED_BONUS_POINTS, // 10 puntos por ser invitado
+    birthday_bonus_points: current.birthdayBonusPoints, // 20 puntos por cumpleaños (definido en BD)
+    referrer_bonus_points: current.referrerBonusPoints, // 15 puntos por invitar a un amigo (definido en BD)
+    referred_bonus_points: current.referredBonusPoints, // 10 puntos por ser invitado (definido en BD)
     notifications_enabled: isFullAdmin
       ? Boolean(settings.notificationsEnabled ?? current.notificationsEnabled)
       : current.notificationsEnabled,

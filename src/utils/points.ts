@@ -5,11 +5,15 @@ import { BASE_PESOS_PER_POINT } from '../constants/index.ts';
  * NOTA DE SEGURIDAD: Este cálculo es únicamente informativo para la interfaz.
  * El cálculo definitivo se realiza y valida exclusivamente en el backend (PostgreSQL).
  */
-export function calculateClientPreviewBasePoints(amountInPesos: number): number {
+export function calculateClientPreviewBasePoints(
+  amountInPesos: number,
+  rate: number = BASE_PESOS_PER_POINT
+): number {
   if (!Number.isFinite(amountInPesos) || amountInPesos <= 0) {
     return 0;
   }
-  return Math.floor(amountInPesos / BASE_PESOS_PER_POINT);
+  const safeRate = Number.isFinite(rate) && rate > 0 ? rate : BASE_PESOS_PER_POINT;
+  return Math.floor(amountInPesos / safeRate);
 }
 
 export function formatCurrencyARS(amount: number | string): string {
