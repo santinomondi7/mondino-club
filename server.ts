@@ -13,15 +13,27 @@ async function startServer() {
   // Mount stateless API routes (/api/*) compatible with Vercel & local server
   app.use(apiApp);
 
+  // Bind port 3000 immediately so cold-start readiness probes succeed without waiting for Vite initialization
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Mondino Club server running on http://0.0.0.0:${PORT}`);
+  });
+
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
+    const vitePromise = createViteServer({
       server: {
         middlewareMode: true,
         hmr: false,
       },
       appType: 'spa',
     });
-    app.use(vite.middlewares);
+    app.use(async (req, res, next) => {
+      try {
+        const vite = await vitePromise;
+        vite.middlewares(req, res, next);
+      } catch (err) {
+        next(err);
+      }
+    });
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
@@ -29,10 +41,6 @@ async function startServer() {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
-
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Mondino Club server running on http://0.0.0.0:${PORT}`);
-  });
 }
 
 startServer();

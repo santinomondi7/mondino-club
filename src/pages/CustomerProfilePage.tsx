@@ -23,6 +23,7 @@ import {
   requestAndActivateNotifications,
   triggerSystemAndInAppNotification,
 } from '../utils/notifications.ts';
+import { LegalModal, LegalTab } from '../components/LegalModal.tsx';
 
 export const CustomerProfilePage: React.FC = () => {
   const { profile, settings, referrals, refreshAllData, logout } = useAuth();
@@ -72,6 +73,13 @@ export const CustomerProfilePage: React.FC = () => {
   const [deviceNotifsActive, setDeviceNotifsActive] = useState<boolean>(() =>
     isDeviceNotificationsEnabled()
   );
+  const [legalModalOpen, setLegalModalOpen] = useState(false);
+  const [legalTab, setLegalTab] = useState<LegalTab>('terminos');
+
+  const openLegal = (tab: LegalTab) => {
+    setLegalTab(tab);
+    setLegalModalOpen(true);
+  };
 
   useEffect(() => {
     const onStatusChange = (e: Event) => {
@@ -559,6 +567,51 @@ export const CustomerProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Información Legal, Privacidad y Protección de Datos Personales */}
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
+            <Lock className="w-4 h-4 text-emerald-800 shrink-0" />
+            <span>Privacidad, Términos y Marco Legal ({settings.clubName})</span>
+          </div>
+          <p className="text-[11px] text-slate-500 leading-relaxed">
+            Consultá el reglamento oficial del programa de puntos, el tratamiento de datos
+            personales (Ley N° 25.326) y el aviso legal regulatorio farmacéutico (Ley N° 17.565 y
+            Defensa del Consumidor Ley N° 24.240).
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          <button
+            type="button"
+            onClick={() => openLegal('terminos')}
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 text-slate-700 hover:text-emerald-900 text-xs font-semibold transition cursor-pointer"
+          >
+            Términos y Condiciones
+          </button>
+          <button
+            type="button"
+            onClick={() => openLegal('privacidad')}
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 text-slate-700 hover:text-emerald-900 text-xs font-semibold transition cursor-pointer"
+          >
+            Política de Privacidad
+          </button>
+          <button
+            type="button"
+            onClick={() => openLegal('aviso-legal')}
+            className="px-3 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-emerald-50 hover:border-emerald-200 text-slate-700 hover:text-emerald-900 text-xs font-semibold transition cursor-pointer"
+          >
+            Aviso Legal
+          </button>
+        </div>
+      </div>
+
+      <LegalModal
+        isOpen={legalModalOpen}
+        initialTab={legalTab}
+        onClose={() => setLegalModalOpen(false)}
+        settings={settings}
+      />
     </div>
   );
 };

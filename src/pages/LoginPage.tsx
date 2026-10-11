@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
 import { ZoomControls } from '../components/ZoomControls.tsx';
+import { LegalModal, LegalTab } from '../components/LegalModal.tsx';
 
 const PHARMACY_QUOTES = [
   {
@@ -48,6 +49,29 @@ export const LoginPage: React.FC = () => {
   const [infoMsg, setInfoMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
+  const [legalModalOpen, setLegalModalOpen] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const p = window.location.pathname.toLowerCase();
+    return (
+      p === '/privacidad' ||
+      p === '/privacy' ||
+      p === '/terminos' ||
+      p === '/terms' ||
+      p === '/legal'
+    );
+  });
+  const [legalTab, setLegalTab] = useState<LegalTab>(() => {
+    if (typeof window === 'undefined') return 'terminos';
+    const p = window.location.pathname.toLowerCase();
+    if (p === '/privacidad' || p === '/privacy') return 'privacidad';
+    if (p === '/legal') return 'aviso-legal';
+    return 'terminos';
+  });
+
+  const openLegal = (tab: LegalTab) => {
+    setLegalTab(tab);
+    setLegalModalOpen(true);
+  };
 
   const isIframePreview =
     typeof window !== 'undefined' &&
@@ -324,10 +348,33 @@ export const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mt-6 pt-5 border-t border-slate-100 text-[11px] text-slate-400 text-center space-y-1">
+            <div className="mt-6 pt-5 border-t border-slate-100 text-[11px] text-slate-500 text-center space-y-2">
               <p>
-                Al ingresar aceptás los Términos y Condiciones del programa de fidelización de{' '}
-                {settings.clubSubtitle}.
+                Al ingresar aceptás los{' '}
+                <button
+                  type="button"
+                  onClick={() => openLegal('terminos')}
+                  className="text-emerald-800 hover:underline font-semibold cursor-pointer"
+                >
+                  Términos y Condiciones
+                </button>
+                , la{' '}
+                <button
+                  type="button"
+                  onClick={() => openLegal('privacidad')}
+                  className="text-emerald-800 hover:underline font-semibold cursor-pointer"
+                >
+                  Política de Privacidad (Ley 25.326)
+                </button>{' '}
+                y el{' '}
+                <button
+                  type="button"
+                  onClick={() => openLegal('aviso-legal')}
+                  className="text-emerald-800 hover:underline font-semibold cursor-pointer"
+                >
+                  Aviso Legal
+                </button>{' '}
+                del programa de fidelización de {settings.clubSubtitle}.
               </p>
             </div>
           </div>
@@ -341,11 +388,40 @@ export const LoginPage: React.FC = () => {
             © {new Date().getFullYear()} <strong>{settings.clubSubtitle}</strong> —{' '}
             {settings.clubName}.
           </span>
-          <span className="text-slate-400">
-            Regla oficial inmutable: $1.000 de compra = 1 punto Mondino.
-          </span>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-[11px]">
+            <button
+              type="button"
+              onClick={() => openLegal('terminos')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Términos y Condiciones
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => openLegal('privacidad')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Política de Privacidad
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => openLegal('aviso-legal')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Aviso Legal y Defensa del Consumidor
+            </button>
+          </div>
         </div>
       </footer>
+
+      <LegalModal
+        isOpen={legalModalOpen}
+        initialTab={legalTab}
+        onClose={() => setLegalModalOpen(false)}
+        settings={settings}
+      />
     </div>
   );
 };

@@ -22,6 +22,7 @@ import { formatPoints, formatDateTimeES } from '../utils/points.ts';
 import { mondinoApi } from '../services/api.ts';
 import { PWAInstallButton } from '../components/PWAInstallButton.tsx';
 import { ZoomControls } from '../components/ZoomControls.tsx';
+import { LegalModal, LegalTab } from '../components/LegalModal.tsx';
 import {
   InAppPushBannerPayload,
   hasPromptedForNotifications,
@@ -65,6 +66,13 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
   const [showNotifPermissionModal, setShowNotifPermissionModal] = useState<boolean>(false);
   const [activatingNotifs, setActivatingNotifs] = useState(false);
   const [pushBanners, setPushBanners] = useState<InAppPushBannerPayload[]>([]);
+  const [legalModalOpen, setLegalModalOpen] = useState<boolean>(false);
+  const [legalTab, setLegalTab] = useState<LegalTab>('terminos');
+
+  const openLegal = (tab: LegalTab) => {
+    setLegalTab(tab);
+    setLegalModalOpen(true);
+  };
 
   // Estado del modal obligatorio de completar datos al iniciar sesión por primera vez
   const [firstName, setFirstName] = useState('');
@@ -674,6 +682,48 @@ export const CustomerLayout: React.FC<CustomerLayoutProps> = ({
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 py-6">{children}</main>
+
+      {/* Legal Footer */}
+      <footer className="bg-white border-t border-slate-200/80 py-3.5 px-4 text-center text-[11px] text-slate-500">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+          <span>
+            © {new Date().getFullYear()} <strong>{settings.clubSubtitle}</strong> —{' '}
+            {settings.clubName}
+          </span>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <button
+              type="button"
+              onClick={() => openLegal('terminos')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Términos y Condiciones
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => openLegal('privacidad')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Política de Privacidad (Ley 25.326)
+            </button>
+            <span className="text-slate-300">·</span>
+            <button
+              type="button"
+              onClick={() => openLegal('aviso-legal')}
+              className="text-slate-600 hover:text-emerald-800 hover:underline font-medium cursor-pointer"
+            >
+              Aviso Legal y Defensa del Consumidor
+            </button>
+          </div>
+        </div>
+      </footer>
+
+      <LegalModal
+        isOpen={legalModalOpen}
+        initialTab={legalTab}
+        onClose={() => setLegalModalOpen(false)}
+        settings={settings}
+      />
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 inset-x-0 bg-white border-t border-slate-200 z-30">
